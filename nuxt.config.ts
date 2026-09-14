@@ -20,6 +20,13 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   vite: { plugins: [tailwindcss()] },
 
+  // Files in components/ds already carry the Ds prefix, so turn off the directory prefix that
+  // would otherwise make them DsDsButton.
+  components: [
+    { path: '~/components/ds', pathPrefix: false },
+    '~/components',
+  ],
+
   // TODO(phase 16): replace with the real domain before the production build —
   // OG images, canonicals, feeds and the sitemap all derive from this.
   site: { url: 'https://example.com', name: 'Personal Site', defaultLocale: 'en' },
