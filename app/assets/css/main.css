@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./tokens.css";
+@import "./base.css";
 
 /*
   Tailwind v4 compiles `dark:` to @media (prefers-color-scheme: dark) by default, which follows

@@ -1,0 +1,130 @@
+/*
+  Base layer — the rules that apply before any component exists.
+*/
+
+@layer base {
+  :root {
+    /* Published by TheHeader in Phase 5; this default keeps scroll-padding honest until then. */
+    --header-h: 4rem;
+  }
+
+  html {
+    /* scroll-padding is what keeps a hash-linked heading out from under the sticky header.
+       WCAG 2.2 Focus Not Obscured depends on it, not just on it looking tidy. */
+    scroll-padding-top: calc(var(--header-h) + 1.5rem);
+    scroll-behavior: smooth;
+    background-color: var(--ds-canvas);
+    color-scheme: dark;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--ds-canvas);
+    color: var(--ds-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Deliberately no `text-rendering: optimizeLegibility` — it delays first paint on long
+       pages in exchange for kerning nobody notices at these sizes. */
+  }
+
+  /*
+    One focus rule for the whole codebase. There is no `outline: none` anywhere, and every
+    component inherits this instead of inventing its own ring.
+  */
+  :focus-visible {
+    outline: 2px solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--ds-accent);
+    color: var(--ds-on-accent);
+  }
+
+  /* Anything with an id is a potential hash target, so keep it clear of the header too. */
+  :target {
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+  }
+
+  /* Media never overflows its container or arrives without reserved space. */
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+}
+
+/*
+  The signature glow.
+
+  The brand source draws this with `filter: blur(90px)` on a 660px element. That is a large,
+  repeatedly-composited blur — expensive on scroll, especially on mobile. Two radial gradients
+  produce the same soft field for free, and can be painted on a pseudo-element behind content.
+*/
+@layer components {
+  .ds-glow {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .ds-glow::before {
+    content: "";
+    position: absolute;
+    inset: -20% -10% auto -10%;
+    z-index: -1;
+    height: 130%;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        38rem 26rem at 8% 0%,
+        color-mix(in oklab, var(--color-brand-400) var(--ds-glow-brand), transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        32rem 22rem at 92% 88%,
+        color-mix(in oklab, var(--color-echo-400) var(--ds-glow-echo), transparent),
+        transparent 70%
+      );
+  }
+}
+
+/*
+  Reduced motion — honour it globally rather than per-component, so a component can never
+  forget. Durations collapse instead of transitions being removed, which keeps state changes
+  instant without breaking anything that listens for transitionend.
+*/
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+  Forced colours (Windows High Contrast). Anything whose edge comes from a token background
+  loses that edge entirely, so give it a real border the UA can recolour.
+*/
+@media (forced-colors: active) {
+  .ds-glow::before {
+    display: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid CanvasText;
+  }
+}
