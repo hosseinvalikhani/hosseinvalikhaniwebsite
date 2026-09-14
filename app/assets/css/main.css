@@ -1,49 +1,12 @@
 @import "tailwindcss";
+@import "./tokens.css";
 
 /*
   Tailwind v4 compiles `dark:` to @media (prefers-color-scheme: dark) by default, which follows
   the OS and ignores the class @nuxtjs/color-mode stamps on <html>. Without this the theme
   toggle flips the class but no `dark:` utility reacts to it. Re-point the variant at the class.
+
+  Note that the semantic tokens in tokens.css already switch on that class, so `dark:` should be
+  rare in application code — reach for a semantic utility (`bg-surface`, `text-fg-muted`) first.
 */
 @custom-variant dark (&:where(.dark, .dark *));
-
-/*
-  Phase 1 stopgap — replaced by tokens.css + base.css in Phase 2.
-
-  The canvas has to be painted on <html>, not on a wrapper element: the browser paints the
-  root background before any layout, so a reload flashes the wrong colour if only an inner
-  div carries it. @nuxtjs/color-mode stamps the class from an inline <head> script before
-  first paint, so the class branches below win in time.
-
-  Three states, in the order the cascade needs them:
-    1. bare :root          → light, the no-preference default
-    2. prefers-color-scheme → dark, for `preference: 'system'` visitors on a dark OS. This also
-       keeps the canvas correct with JavaScript disabled, when no class is ever stamped.
-    3. .dark / .light      → an explicit choice, which must beat the media query. Same
-       specificity as `html:not(.light)`, so it has to come last to win.
-
-  color-scheme hands the UA the right form-control, scrollbar and canvas defaults to match.
-*/
-@layer base {
-  html {
-    color-scheme: light;
-    background-color: #f8fafc;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    html:not(.light) {
-      color-scheme: dark;
-      background-color: #020420;
-    }
-  }
-
-  html.dark {
-    color-scheme: dark;
-    background-color: #020420;
-  }
-
-  html.light {
-    color-scheme: light;
-    background-color: #f8fafc;
-  }
-}

@@ -1,0 +1,242 @@
+/*
+  Token layer — tier 1 (primitives) and tier 2 (semantic roles).
+
+  Every value in tier 1 is transcribed from nuxt-tailwind-color-system-source.html.
+  Nothing here is invented, and no hex literal belongs anywhere else in the codebase.
+*/
+
+@theme {
+  /* ---------------------------------------------------------------- *
+   * Green — the Nuxt ramp. The brand colour sits at 400.
+   * ---------------------------------------------------------------- */
+  --color-brand-50: #effdf5;
+  --color-brand-100: #d9fbe8;
+  --color-brand-200: #b3f5d1;
+  --color-brand-300: #75edae;
+  --color-brand-400: #00dc82;
+  --color-brand-500: #00c16a;
+  --color-brand-600: #00a155;
+  --color-brand-700: #007f45;
+  --color-brand-800: #016538;
+  --color-brand-900: #0a5331;
+  --color-brand-950: #052e16;
+
+  /* ---------------------------------------------------------------- *
+   * Sky — the Tailwind ramp. The echo colour sits at 400.
+   * ---------------------------------------------------------------- */
+  --color-echo-50: #f0f9ff;
+  --color-echo-100: #e0f2fe;
+  --color-echo-200: #bae6fd;
+  --color-echo-300: #7dd3fc;
+  --color-echo-400: #38bdf8;
+  --color-echo-500: #0ea5e9;
+  --color-echo-600: #0284c7;
+  --color-echo-700: #0369a1;
+  --color-echo-800: #075985;
+  --color-echo-900: #0c4a6e;
+  --color-echo-950: #082f49;
+
+  /* ---------------------------------------------------------------- *
+   * Slate — the neutral backbone. Text, surfaces, borders.
+   * ---------------------------------------------------------------- */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+
+  /* ---------------------------------------------------------------- *
+   * Fixed points
+   * ---------------------------------------------------------------- */
+  --color-ink: #020420; /* Nuxt dark — the base. Never #000. */
+
+  --color-signal-400: #fbbf24;
+  --color-signal-600: #d97706;
+  --color-signal-700: #b45309;
+
+  --color-danger-400: #f87171;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+
+  /* ---------------------------------------------------------------- *
+   * Type
+   * ---------------------------------------------------------------- */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Fluid scale — clamp() rather than breakpoint jumps, so nothing snaps mid-range. */
+  --text-eyebrow: 0.8125rem;
+  --text-eyebrow--line-height: 1.2;
+  --text-eyebrow--letter-spacing: 0.2em;
+  --text-eyebrow--font-weight: 700;
+
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.55;
+  --text-base: 1rem;
+  --text-base--line-height: 1.65;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.6;
+
+  --text-xl: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-xl--line-height: 1.4;
+  --text-2xl: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  --text-2xl--line-height: 1.25;
+  --text-2xl--letter-spacing: -0.02em;
+  --text-3xl: clamp(1.875rem, 1.5rem + 1.9vw, 2.75rem);
+  --text-3xl--line-height: 1.1;
+  --text-3xl--letter-spacing: -0.025em;
+
+  --text-display: clamp(2.5rem, 1.6rem + 4.4vw, 4.5rem);
+  --text-display--line-height: 0.95;
+  --text-display--letter-spacing: -0.035em;
+  --text-display--font-weight: 800;
+
+  /* ---------------------------------------------------------------- *
+   * Shape — radii read off the brand source.
+   * ---------------------------------------------------------------- */
+  --radius-chip: 0.5rem;
+  --radius-control: 0.75rem;
+  --radius-panel: 1.25rem;
+  --radius-card: 1.375rem;
+
+  /* ---------------------------------------------------------------- *
+   * Motion
+   * ---------------------------------------------------------------- */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-base: 220ms;
+  --duration-slow: 420ms;
+
+  /* ---------------------------------------------------------------- *
+   * Layout
+   * ---------------------------------------------------------------- */
+  --container-prose: 65ch;
+  --container-page: 72rem;
+}
+
+/*
+  Tier 2 — semantic roles.
+
+  `@theme inline` makes the generated utility reference the variable itself rather than its
+  resolved value, so `bg-canvas` re-resolves the instant the theme class flips. A plain
+  `@theme` block would bake one theme's colours into the compiled utility and the toggle
+  would do nothing.
+*/
+@theme inline {
+  --color-canvas: var(--ds-canvas);
+  --color-surface: var(--ds-surface);
+  --color-raised: var(--ds-raised);
+
+  --color-hairline: var(--ds-hairline);
+  --color-hairline-strong: var(--ds-hairline-strong);
+
+  --color-fg: var(--ds-fg);
+  --color-fg-muted: var(--ds-fg-muted);
+  --color-fg-subtle: var(--ds-fg-subtle);
+
+  --color-accent: var(--ds-accent); /* fills only */
+  --color-accent-text: var(--ds-accent-text); /* type and icons on the canvas */
+  --color-accent-hover: var(--ds-accent-hover);
+  --color-on-accent: var(--ds-on-accent);
+
+  --color-link: var(--ds-link);
+  --color-link-hover: var(--ds-link-hover);
+
+  --color-signal: var(--ds-signal);
+  --color-danger: var(--ds-danger);
+  --color-focus: var(--ds-focus);
+}
+
+/*
+  Dark is the default and the mode the brand was designed for, so it lives on bare :root.
+  That also means a visitor with JavaScript disabled — no class is ever stamped — gets the
+  designed-for theme rather than an accidental one.
+*/
+:root,
+:root.dark {
+  --ds-canvas: #020420;
+  --ds-surface: #0f172a;
+  --ds-raised: #131f36;
+
+  --ds-hairline: #1e293b;
+  --ds-hairline-strong: #334155;
+
+  --ds-fg: #f8fafc;
+  --ds-fg-muted: #94a3b8;
+  --ds-fg-subtle: #64748b;
+
+  --ds-accent: #00dc82;
+  --ds-accent-text: #00dc82; /* 11.1:1 on ink */
+  --ds-accent-hover: #00c16a;
+  --ds-on-accent: #020420; /* ink on green — 11.1:1 */
+
+  --ds-link: #38bdf8; /* 9.4:1 on ink */
+  --ds-link-hover: #7dd3fc;
+
+  --ds-signal: #fbbf24;
+  --ds-danger: #f87171;
+  --ds-focus: #00dc82;
+
+  --ds-glow-brand: 26%;
+  --ds-glow-echo: 20%;
+}
+
+/*
+  Light mode. Fills keep the brand hue so the colour is identical across themes; text and
+  icons step down to the 700 values, because green at 1.8:1 and sky at 2.1:1 on white are
+  measured failures. This split is the whole reason `accent` and `accent-text` are two tokens.
+*/
+:root.light {
+  --ds-canvas: #f8fafc;
+  --ds-surface: #ffffff;
+  --ds-raised: #f1f5f9;
+
+  --ds-hairline: #e2e8f0;
+  --ds-hairline-strong: #cbd5e1;
+
+  --ds-fg: #020420;
+  --ds-fg-muted: #475569;
+  --ds-fg-subtle: #64748b;
+
+  --ds-accent: #00dc82;
+  --ds-accent-text: #007f45; /* 5.1:1 on white */
+  --ds-accent-hover: #00a155;
+  --ds-on-accent: #020420;
+
+  --ds-link: #0369a1; /* 5.9:1 on white */
+  --ds-link-hover: #075985;
+
+  --ds-signal: #b45309;
+  --ds-danger: #b91c1c;
+  --ds-focus: #007f45;
+
+  --ds-glow-brand: 15%;
+  --ds-glow-echo: 11%;
+}
+
+/*
+  prefers-contrast: more — widen every separation. Muted text moves a step toward the
+  foreground and hairlines become visible rather than suggested.
+*/
+@media (prefers-contrast: more) {
+  :root,
+  :root.dark {
+    --ds-fg-muted: #cbd5e1;
+    --ds-fg-subtle: #94a3b8;
+    --ds-hairline: #475569;
+    --ds-hairline-strong: #64748b;
+  }
+
+  :root.light {
+    --ds-fg-muted: #334155;
+    --ds-fg-subtle: #475569;
+    --ds-hairline: #94a3b8;
+    --ds-hairline-strong: #64748b;
+  }
+}

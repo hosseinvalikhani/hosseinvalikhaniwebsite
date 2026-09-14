@@ -42,6 +42,16 @@ export default defineNuxtConfig({
 
   image: { format: ['avif', 'webp'], quality: 72, densities: [1, 2] },
 
+  // Self-hosted, Latin-subset, with fallback metric overrides generated automatically so the
+  // swap costs no layout shift. Two families is the budget — a third has to earn its request.
+  fonts: {
+    defaults: { subsets: ['latin'], styles: ['normal'], fallbacks: { 'sans-serif': ['Arial'] } },
+    families: [
+      { name: 'Inter', provider: 'google', weights: [400, 500, 600, 700, 800] },
+      { name: 'JetBrains Mono', provider: 'google', weights: [400, 700] },
+    ],
+  },
+
   // Off until Phase 10 builds the OG template. Enabling it early only emits renderer and
   // font-resolution warnings for images nothing links to yet. Phase 10 turns this into
   // `{ zeroRuntime: true, fonts: ['Inter:700', 'Inter:800'] }` — baked at build, no client runtime.
