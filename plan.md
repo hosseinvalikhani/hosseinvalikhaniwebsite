@@ -1,41 +1,70 @@
-# Personal Website — Implementation Plan
+# Personal Website — Phased Build Plan
 
 Stack: **Nuxt 4 + Tailwind CSS v4 + a first-party design system + Nuxt Content v3 + Nuxt SEO**,
 prerendered as a static site. **No Nuxt UI, no component library.**
 
-This document is the build spec. Work through the phases in order. Each phase ends with a
-**Gate** — do not start the next phase until the gate passes. Each phase also names the commits it
-should produce (the full ladder is in §18).
-
 Colour, ramps, ratios and contrast results come from `nuxt-tailwind-color-system-source.html` in
-this repo. That file is the source of truth; tokens are transcribed from it, never invented.
+this repo (summarised in **Appendix A**). That file is the source of truth; tokens are transcribed
+from it, never invented.
 
 ---
 
-## What changed in this revision
+## How we work through this
 
-| Area | Before | Now |
-|---|---|---|
-| UI layer | `@nuxt/ui` v4 | Own design system: token layer + ~15 primitives, zero component deps |
-| Icons | `@nuxt/icon` runtime | Compile-time inline SVG set (no runtime resolver, no network) |
-| Prose | Nuxt UI prose components | Own `Prose*` components wired into MDC |
-| Overlay | `USlideover` / Reka UI | Native `<dialog>.showModal()` — free focus trap, inert, Escape |
-| Colour | "pick a palette" | NUXTWIND tokens, dark-first, with light-mode contrast remapping |
-| Perf target | Lighthouse ≥ 95 | Hard budgets: ≤ 90 KB JS gz, LCP ≤ 1.5 s, CLS ≤ 0.02, INP ≤ 100 ms |
-| SEO surface | home + blog | + tag pages, RSS/JSON feed, `llms.txt`, ProfilePage schema, real 404 |
-| A11y target | WCAG 2.1 AA, manual axe | WCAG 2.2 AA, axe in CI, forced-colors + `prefers-contrast` support |
-| QA | manual checklist | typecheck + lint (a11y rules) + vitest + Playwright/axe + Lighthouse CI |
+Every phase below ends with something you can **open in a browser and judge**. The loop is the
+same each time:
 
-Dropping Nuxt UI removes `@nuxt/ui`, `reka-ui`, `tailwind-variants`, `tailwind-merge` and
-`@iconify/vue` from the graph — roughly 120–160 KB of JavaScript we never ship, on a site whose
-entire interactive surface is a nav drawer, a theme toggle and a copy button. The cost is that we
-own ~15 components; every one of them is specified in §5.
+1. I build the phase.
+2. I stop and hand you a URL plus a short **Review** checklist.
+3. You look at it, break it, and tell me what's wrong or what you'd rather see.
+4. I fix it inside the same phase — no new work starts.
+5. Once you approve, **then** I commit, and only then does the next phase begin.
+
+Rules that make this work:
+
+- **Nothing is committed before you approve it.** The commit message for each phase is written in
+  advance, in the phase itself, so history reads as a clean ladder.
+- **No phase is a dead phase.** Config and token work is deliberately paired with a visible
+  surface (the style guide at `/design-system`) so there is never a "trust me, it's fine" step.
+- **Design feedback is cheapest early.** Phases 2–4 are pure design system on a style-guide page,
+  before any real content exists. A colour, radius or type change there is a one-line edit; the
+  same change after the whole site is built is still one line *because* it's tokenised — that's
+  the point of doing it in this order.
+- **Structural feedback has a deadline.** Section order, the hero layout and the nav model get
+  harder to change after Phase 8. Phases 5–7 exist to surface that while it's still cheap.
+- If a phase's gate fails, we fix it in that phase. We do not carry a known failure forward.
 
 ---
 
-## 0. Inputs required before coding
+## Phase map
 
-Fill these in `app/app.config.ts` (see §4.4). Do not hardcode them into components.
+| # | Phase | What you can see when it's done | Where to look |
+|---|---|---|---|
+| 0 | Inputs | — (you fill in a table) | — |
+| 1 | Running skeleton | Dev server boots, one styled page, theme switches | `/` |
+| 2 | Token layer + style guide | Every colour, type size, radius in both themes | `/design-system` |
+| 3 | Static primitives | Buttons, links, badges, cards, sections in every state | `/design-system` |
+| 4 | Interactive primitives | Dialog, theme toggle, copy button, breadcrumb | `/design-system` |
+| 5 | Layout shell | Real header, footer and mobile drawer around a stub page | `/` |
+| 6 | Hero | The first screen, fully designed | `/` |
+| 7 | Rest of the home page | About, Experience, Skills, Contact | `/` |
+| 8 | Blog | Listing, post page, all markdown elements styled | `/blog`, `/blog/hello-world` |
+| 9 | Tag pages + error page | Tag landing pages and a real 404 | `/blog/tag/android`, `/nope` |
+| 10 | SEO + structured data | View-source: titles, canonicals, OG, JSON-LD | any route |
+| 11 | Feeds, sitemap, robots | RSS, JSON feed, sitemap, llms.txt | `/rss.xml` etc. |
+| 12 | Accessibility pass | Keyboard + screen reader + axe, both themes | all routes |
+| 13 | Performance pass | Lighthouse against the built output | built site |
+| 14 | Responsive pass | 320 / 375 / 768 / 1440 px and 400 % zoom | all routes |
+| 15 | Automated QA + CI | Checks run on every push | CI |
+| 16 | Deploy | The live site | production URL |
+
+---
+
+## Phase 0 — Inputs
+
+**Goal:** collect everything the site needs so no phase stalls waiting on copy.
+
+Fill these in; they land in `app/app.config.ts` in Phase 2 and nothing hardcodes them.
 
 | Input | Notes |
 |---|---|
@@ -47,72 +76,27 @@ Fill these in `app/app.config.ts` (see §4.4). Do not hardcode them into compone
 | Skill groups | 3–5 groups, ~5 items each |
 | Social links | GitHub, LinkedIn, X, email |
 | Canonical site URL | required for sitemap, OG, canonicals, feeds |
-| Profile photo | square, ≥ 800 px; `public/img/avatar-placeholder.svg` until supplied |
-| Locale | default `en`; set `lang` once in `app.vue` |
+| Profile photo | square, ≥ 800 px; a placeholder SVG stands in until supplied |
+| Locale | default `en` |
+
+**▶ Review:** none — but placeholder text ships until these arrive, and every screenshot you
+review before they land will contain lorem-ish filler. Supplying the real intro and about copy
+before Phase 6 makes the hero review meaningful instead of theoretical.
+
+**Gate:** the table is filled, or you've explicitly said "use placeholders for now".
 
 ---
 
-## 1. Brand foundation
+## Phase 1 — Running skeleton
 
-Transcribed from the colour system source. Read this before writing any CSS.
+**Goal:** a Nuxt 4 app that boots, compiles Tailwind v4, and switches theme — nothing else.
 
-**The structure of the system:** one vivid colour, one echo, one accent, on ink.
-
-| Role | Name | Hex | Notes |
-|---|---|---|---|
-| Primary | Nuxt Green | `#00DC82` | ramp step 400 |
-| Primary deep | Pine | `#00A155` | ramp step 600 — hover on dark |
-| Secondary | Sky | `#38BDF8` | ramp step 400 |
-| Secondary deep | Deep Sky | `#0284C7` | ramp step 600 |
-| Accent | Signal Amber | `#FBBF24` | emphasis only, ~2% of the surface |
-| Base | Nuxt Ink | `#020420` | never `#000` |
-| Surface | Slate Deep | `#0F172A` | cards, raised panels |
-| Border | Hairline | `#1E293B` | 1 px rules |
-| Muted text | Mist | `#94A3B8` | captions, metadata |
-| Paper | Cloud | `#F8FAFC` | headings on dark, canvas on light |
-
-**Proportion — enforce it; this is what stops a palette looking amateur:**
-ink + surface ≈ 60 %, cloud + mist type ≈ 30 %, green ≈ 8 % (one element per screen),
-sky + amber ≈ 2 %.
-
-**The legibility rule (non-negotiable).** Both brand colours are bright: excellent on ink,
-failing on white. Measured in the source: green on ink 11.1:1 **PASS**, sky on ink 9.4:1 **PASS**,
-amber on ink 12.1:1 **PASS**, mist on ink 7.9:1 **PASS**, green on white 1.8:1 **FAIL**,
-sky on white 2.1:1 **FAIL**, green-700 on white 5.1:1 **PASS**, sky-700 on white 5.9:1 **PASS**.
-
-Therefore the semantic layer (§4.2) **must** remap accent *text* to the 700 step in light mode.
-Solid accent *fills* keep `#00DC82` in both modes with **ink text on green** (11.1:1), which also
-keeps the brand colour identical across themes. Two tokens, not one: `accent` (fills) and
-`accent-text` (type and icons on the canvas).
-
-**Guardrails.** Never green body text. Never a 50/50 green/sky split. No green→sky gradients.
-Amber for emphasis only. Never pure black — `#020420`. Never more than three colours in one
-composition.
-
-**Signature device.** Mono-set, letter-spaced, uppercase **eyebrow labels** above every section
-heading — lifted straight from the brand source — plus the paired green/sky **glow** behind the
-hero. One device, used consistently; nothing else decorative. Numbered markers (01/02/03) appear
-only on Experience, where the order is chronological and therefore means something.
-
-> Performance note: the source renders glows as blurred divs (`filter: blur(90px)` on a 660 px
-> element). Do **not** copy that — a blur that size is a heavy, repeated composite on scroll.
-> Reproduce it as a static `radial-gradient` background on one `::before`, which costs nothing.
-
-**Type.** Two families only: **Inter Variable** (UI, body, and display headings at weight 800 with
-`-0.035em` tracking) and **JetBrains Mono** (eyebrows, dates, reading time, code). The personality
-comes from the mono eyebrow, the tight display sizing and the glow — not from a third font. A
-display face can be swapped in later, but it costs a font file and must re-pass §13's budget.
-
-**Gate:** none — this phase is reading. It produces no commit.
-
----
-
-## 2. Project setup and dependencies
+**Build**
 
 ```bash
 npx nuxi@latest init personal-site      # Nuxt 4.x
 cd personal-site
-npm i -D tailwindcss @tailwindcss/vite  # Tailwind v4, CSS-first, through the Vite plugin
+npm i -D tailwindcss @tailwindcss/vite  # Tailwind v4, CSS-first, via the Vite plugin
 npx nuxi module add content             # @nuxt/content v3 (brings MDC + Shiki)
 npx nuxi module add image               # @nuxt/image
 npx nuxi module add fonts               # @nuxt/fonts — self-hosting + fallback metrics
@@ -120,18 +104,13 @@ npx nuxi module add color-mode          # @nuxtjs/color-mode — FOUC-free inlin
 npx nuxi module add eslint              # @nuxt/eslint
 npm i -D @nuxtjs/seo                    # sitemap + robots + schema-org + og-image + link-checker
 npm i -D eslint-plugin-vuejs-accessibility
-npm i -D vitest @nuxt/test-utils happy-dom
-npm i -D @playwright/test @axe-core/playwright
-npm i -D @lhci/cli
 ```
 
-Pinned expectations: `nuxt` ^4.5, `@nuxt/content` ^3, `tailwindcss` ^4.
-
 Do **not** add: a Tailwind config JS file (v4 is CSS-first), a UI or component library, a variant
-library (`tailwind-variants` / `cva` — §5.1 ships a 15-line equivalent), a class-merge utility, an
-icon runtime, a date library (use `Intl.DateTimeFormat`), or an animation library.
+library (`tailwind-variants` / `cva` — Phase 3 ships a 15-line equivalent), a class-merge utility,
+an icon runtime, a date library (use `Intl.DateTimeFormat`), or an animation library.
 
-`nuxt.config.ts`:
+`nuxt.config.ts` — the full config, written once now so later phases only switch things on:
 
 ```ts
 import tailwindcss from '@tailwindcss/vite'
@@ -160,7 +139,6 @@ export default defineNuxtConfig({
   },
 
   image: { format: ['avif', 'webp'], quality: 72, densities: [1, 2] },
-
   ogImage: { zeroRuntime: true, fonts: ['Inter:700', 'Inter:800'] },
 
   experimental: {
@@ -187,81 +165,37 @@ export default defineNuxtConfig({
 })
 ```
 
-Why these settings specifically:
+Why these specifically:
 
 - `prefetchOn.interaction` only — visibility prefetch pulls every in-view route chunk over mobile
   data for no measurable benefit on a site this small.
 - `failOnError: true` — a broken prerender must break the build, not ship half a site.
-- `classSuffix: ''` puts `.dark` / `.light` on `<html>`, which is what §4.2's tokens target.
+- `classSuffix: ''` puts `.dark` / `.light` on `<html>`, which is what Phase 2's tokens target.
 - `ogImage.zeroRuntime` — OG images are baked at build; no Satori runtime reaches the client.
-- Fonts are self-hosted by `@nuxt/fonts`, so there are no third-party origins and no `preconnect`.
+- Fonts are self-hosted, so there are no third-party origins and no `preconnect`.
 
-**Gate:** `npm run dev` serves a blank page with zero console warnings; `npx nuxi typecheck`
-passes; `npm run build` emits no Tailwind or Vite warnings.
+Then: `app/assets/css/main.css` with just `@import "tailwindcss";`, and an `app.vue` that renders
+one heading and a raw theme-toggle button.
 
----
+**▶ Review — `npm run dev`, open `/`**
 
-## 3. Folder structure
+- [ ] Page loads; browser console and terminal are both silent
+- [ ] The toggle flips `<html>` between `class="dark"` and `class="light"` (check DevTools)
+- [ ] Hard-reload in dark mode: **no white flash** before paint
+- [ ] A Tailwind utility (e.g. `text-3xl`) actually applies
 
-```
-app/
-  app.vue
-  error.vue                        # 404 / 500 — same shell, never a dead end
-  app.config.ts                    # all personal data
-  assets/css/
-    main.css                       # entry: tailwind + layers
-    tokens.css                     # @theme primitives + semantic vars
-    base.css                       # reset, focus, motion, forced-colors
-  components/
-    ds/                            # the design system — no app data, no fetching
-      DsButton.vue   DsLink.vue      DsBadge.vue      DsCard.vue
-      DsIcon.vue     DsContainer.vue DsSection.vue    DsEyebrow.vue
-      DsAvatar.vue   DsDialog.vue    DsThemeToggle.vue
-      DsBreadcrumb.vue DsCopyButton.vue DsSkipLink.vue DsVisuallyHidden.vue
-    content/                       # MDC prose overrides
-      ProseH2.vue ProseH3.vue ProseA.vue ProsePre.vue ProseCode.vue
-      ProseImg.vue ProseBlockquote.vue ProseTable.vue ProseUl.vue ProseOl.vue
-    layout/  TheHeader.vue TheFooter.vue TheNavDrawer.vue
-    home/    HeroSection.vue AboutSection.vue ExperienceSection.vue
-             SkillsSection.vue ContactSection.vue
-    blog/    PostCard.vue PostMeta.vue TagList.vue
-    seo/     OgTemplate.vue
-  composables/
-    useSiteSchema.ts  usePostSeo.ts  useActiveSection.ts  useFormatDate.ts
-  design/
-    variants.ts                    # the 15-line variant helper (§5.1)
-    icons.ts                       # icon path data
-  layouts/default.vue
-  pages/
-    index.vue
-    design-system.vue              # living style guide — noindex, not in the sitemap
-    blog/index.vue
-    blog/[slug].vue
-    blog/tag/[tag].vue
-content/blog/*.md
-server/routes/  rss.xml.ts  feed.json.ts  llms.txt.ts
-public/  img/  favicon.ico  site.webmanifest
-tests/  unit/*.spec.ts  e2e/a11y.spec.ts
-content.config.ts  lighthouserc.json  playwright.config.ts  eslint.config.mjs
-```
+**Gate:** `npx nuxi typecheck` clean; `npm run build` emits no Tailwind or Vite warnings.
 
-Rules:
-
-- `pages/` composes and fetches; `components/home/*` and `components/blog/*` render props;
-  `components/ds/*` know nothing about this site's content.
-- `app.config.ts` holds data. No fetching in presentational components.
-- Nothing in `components/ds/` imports `app.config` or `#content`.
-
-**Gate:** the structure exists, every file is empty-but-valid, the dev server is still clean.
+**Commit:** `chore: scaffold nuxt 4 app with tailwind v4, content and seo modules`
 
 ---
 
-## 4. Token layer
+## Phase 2 — Token layer + style guide
 
-Three tiers in this order: **primitives** (raw ramps) → **semantic** (roles, theme-switched) →
-**component** (per-component vars, only where a component genuinely varies).
+**Goal:** the entire visual language, on screen, before a single component exists. This is the
+most important review in the project — everything downstream inherits these values.
 
-### 4.1 Primitives — `app/assets/css/tokens.css`
+### 2.1 Primitives — `app/assets/css/tokens.css`
 
 ```css
 @theme {
@@ -315,11 +249,11 @@ Three tiers in this order: **primitives** (raw ramps) → **semantic** (roles, t
 }
 ```
 
-### 4.2 Semantic layer — roles, theme-switched
+### 2.2 Semantic layer — roles, theme-switched
 
 `@theme inline` makes the generated utility reference the variable itself, so `bg-canvas`
 re-resolves the moment `.dark` flips. This is the only correct v4 pattern for themed tokens; a
-plain `@theme` block would freeze the light values into the compiled CSS.
+plain `@theme` block would freeze one theme's values into the compiled CSS.
 
 ```css
 @theme inline {
@@ -373,28 +307,26 @@ plain `@theme` block would freeze the light values into the compiled CSS.
 
 **Rule:** application code uses semantic utilities only — `bg-canvas`, `text-fg-muted`,
 `border-hairline`, `text-accent-text`. A raw ramp step (`bg-brand-400`) anywhere outside
-`components/ds/` is a bug. Add an ESLint `no-restricted-syntax` rule matching
-`/\b(bg|text|border|ring)-(brand|echo|slate|signal|danger)-\d{2,3}\b/` in class attributes, scoped
-to everything but `app/components/ds/**`.
+`app/components/ds/` is a bug; Phase 15 adds the lint rule that enforces it.
 
-### 4.3 Base layer — `app/assets/css/base.css`
+### 2.3 Base layer — `app/assets/css/base.css`
 
 - `html { scroll-behavior: smooth; scroll-padding-top: var(--header-h); }` — the scroll-padding is
   what keeps a hash-linked heading out from under the sticky header (WCAG 2.2 *Focus Not Obscured*).
 - `:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }` — declared once,
   removed nowhere. No `outline: none` exists in this codebase.
-- `@media (prefers-reduced-motion: reduce)` — `scroll-behavior: auto`, every duration to `1ms`,
-  hero reveal off, view transitions off.
-- `@media (forced-colors: active)` — restore `1px solid` borders on anything that relies on a token
-  background for its edge (buttons, cards, badges); never `forced-color-adjust: none` except on the
-  brand chip in the style guide.
+- `@media (prefers-reduced-motion: reduce)` — `scroll-behavior: auto`, every duration to `1ms`.
+- `@media (forced-colors: active)` — restore `1px solid` borders on anything relying on a token
+  background for its edge.
 - `::selection` in accent.
-- `.glow` utility — the `radial-gradient` implementation of the brand glow (no `filter: blur`).
+- `.glow` — the brand glow as a `radial-gradient` background. **Not** `filter: blur()`: the source
+  file draws it with `blur(90px)` on a 660 px element, which is a heavy repeated composite on
+  scroll. A gradient costs nothing and looks the same at these opacities.
 - `body { background: var(--ds-canvas); color: var(--ds-fg); font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased; }` — and no `text-rendering: optimizeLegibility`, which
   measurably delays first paint on long pages.
 
-`main.css` is only:
+`main.css` becomes:
 
 ```css
 @import "tailwindcss";
@@ -403,13 +335,11 @@ to everything but `app/components/ds/**`.
 @custom-variant dark (&:where(.dark, .dark *));
 ```
 
-### 4.4 `app/app.config.ts`
+### 2.4 `app/app.config.ts` and `content.config.ts`
 
-Single source of truth: `profile` (name, title, intro, about, photo, location), `experience[]`,
-`skills[]`, `socials[]`, `nav[]`. Typed with an exported interface so `useAppConfig()`
-autocompletes. Every home section reads from here.
+`app.config.ts`: typed `profile`, `experience[]`, `skills[]`, `socials[]`, `nav[]` from Phase 0.
 
-### 4.5 `content.config.ts`
+`content.config.ts`:
 
 ```ts
 import { defineContentConfig, defineCollection, z } from '@nuxt/content'
@@ -438,20 +368,52 @@ export default defineContentConfig({
 ```
 
 The length bounds and the `refine` are deliberate: they turn a truncated meta description or a
-missing `alt` into a **build failure** rather than an SEO/a11y regression found six months later.
+missing `alt` into a **build failure** rather than a regression found six months later.
 
-**Gate:** typecheck passes; `queryCollection('blog')` autocompletes; toggling the theme changes
-every colour with no hex literal anywhere outside `tokens.css`; an over-length `description` fails
-the build; contrast spot-checks match §1's table in both modes.
+### 2.5 The style guide — `app/pages/design-system.vue`
+
+Sections, in this order: colour ramps (all three, 11 steps each, with hex labels) → semantic
+swatches with their role names → type scale specimen from `--text-eyebrow` to `--text-display` →
+the mono eyebrow treatment → radii → the glow → focus ring. Both themes, one toggle at the top.
+
+`definePageMeta` sets `robots: 'noindex, nofollow'`; the route rule from Phase 1 keeps it out of
+the sitemap.
+
+**▶ Review — `/design-system`, in both themes**
+
+- [ ] The green reads the way you want it to — this is the site's entire personality
+- [ ] Light mode: green and sky **text** are the darker 700 steps and are comfortably readable
+- [ ] Dark mode: `#020420` background, not black; cards on `#0F172A` are distinguishable from it
+- [ ] Muted text is readable but clearly secondary, in both themes
+- [ ] The type scale has enough jump between `--text-lg` and `--text-display` to feel deliberate
+- [ ] Display heading tracking (`-0.035em`) looks tight, not cramped
+- [ ] The mono eyebrow reads as a signature, not as noise
+- [ ] Radii feel consistent; the 22 px card radius from the brand source isn't too soft for you
+- [ ] The glow is subtle — atmosphere, not a light show
+- [ ] Focus ring is obvious on every background
+- [ ] System theme setting is respected on first visit
+
+**This is the cheapest moment in the project to change any of the above.** Say "greener", "less
+round", "bigger display", "I hate the glow" — it's one line each.
+
+**Gate:** typecheck passes; no hex literal anywhere outside `tokens.css`; an over-length post
+`description` fails the build; contrast spot-checks match Appendix A in both modes.
+
+**Commits:** `feat(ds): add colour, type and shape tokens from the brand system` ·
+`feat(ds): add base layer with focus, motion and forced-colors handling` ·
+`feat: add typed site config and content collection schema` ·
+`docs(ds): add living style guide route`
 
 ---
 
-## 5. The design system
+## Phase 3 — Static primitives
 
-### 5.1 The variant helper — `app/design/variants.ts`
+**Goal:** the non-interactive half of the design system, every variant and state visible at once.
 
-No `cva`, no `tailwind-variants`, no `tailwind-merge`. Components expose `variant` and `size`
-props and do **not** accept colour overrides from outside, so there is nothing to merge:
+### 3.1 The variant helper — `app/design/variants.ts`
+
+No `cva`, no `tailwind-variants`, no `tailwind-merge`. Components expose `variant` and `size` props
+and do **not** accept colour overrides from outside, so there is nothing to merge:
 
 ```ts
 type Options = Record<string, Record<string, string>>
@@ -465,99 +427,185 @@ export function variants<O extends Options>(base: string, options: O, defaults: 
 }
 ```
 
-Typed, tree-shaken, and zero runtime dependency. If a component ever needs a genuine class
-override, that is a signal the component needs another variant — not a merge utility.
+If a component ever needs a genuine class override, that's a signal it needs another variant — not
+a merge utility.
 
-### 5.2 The roster
+### 3.2 Components
 
 | Component | API | Accessibility contract |
 |---|---|---|
-| `DsButton` | `variant: primary \| secondary \| ghost \| link`, `size: sm \| md \| lg`, `to?`, `href?`, `loading?` | renders `<button>` or `<NuxtLink>`, never a clickable div; min target 44×44; icon-only requires `aria-label` (enforced by a discriminated union type); `loading` sets `aria-busy`, never removes the label |
-| `DsLink` | `to`, `external?` | external gets `rel="noopener noreferrer"`, `target="_blank"` and a visually-hidden "(opens in a new tab)"; underline with `text-underline-offset`, never colour-only |
 | `DsIcon` | `name` keyed into `design/icons.ts` | inline `<svg aria-hidden="true" focusable="false">` at `currentColor`; decorative by definition — meaning lives in the parent's label |
-| `DsBadge` | `variant: neutral \| accent \| echo` | non-interactive `<span>`; used inside real `<ul>/<li>` markup |
+| `DsButton` | `variant: primary \| secondary \| ghost \| link`, `size: sm \| md \| lg`, `to?`, `href?`, `loading?` | renders `<button>` or `<NuxtLink>`, never a clickable div; min target 44×44; icon-only requires `aria-label` (enforced by a discriminated union type); `loading` sets `aria-busy` and never removes the label |
+| `DsLink` | `to`, `external?` | external gets `rel="noopener noreferrer"`, `target="_blank"` and a visually-hidden "(opens in a new tab)"; underline with `text-underline-offset`, never colour-only |
+| `DsBadge` | `variant: neutral \| accent \| echo` | non-interactive `<span>`, used inside real `<ul>/<li>` markup |
 | `DsCard` | `as`, `interactive?` | when `interactive`, one stretched-link anchor covers the card (`::after` inset-0) so there is exactly one tab stop and one accessible name |
+| `DsContainer` | `width: page \| prose` | max-width from tokens; padding that never lets content touch the edge |
 | `DsSection` | `id`, `eyebrow`, `heading`, `level` | `<section :id>` + `aria-labelledby` pointing at its own heading; `scroll-margin-top: var(--header-h)` |
 | `DsEyebrow` | `text` | the mono signature label; `aria-hidden` when it duplicates the heading |
-| `DsContainer` | `width: page \| prose` | max-width from tokens; horizontal padding that never lets content touch the edge |
 | `DsAvatar` | `src`, `alt`, `size` | `NuxtImg` with explicit width/height; empty `alt` only when the name is adjacent |
-| `DsDialog` | `open` v-model, `title` | native `<dialog>` + `showModal()` → focus trap, background `inert` and Escape are the browser's job, not ours; `aria-labelledby`; focus returns to the trigger natively; `::backdrop` styled; animated with `@starting-style` + `transition-behavior: allow-discrete`, skipped under reduced motion |
-| `DsThemeToggle` | — | cycles system → light → dark; `aria-label` reflects the *next* state; the announcement goes to a polite live region; fixed dimensions so no layout shift |
-| `DsCopyButton` | `value` | `navigator.clipboard` with a silent no-op fallback; "Copied" announced in a polite live region and shown visually |
-| `DsBreadcrumb` | `items[]` | `<nav aria-label="Breadcrumb"><ol>`, last item `aria-current="page"` |
-| `DsSkipLink` | `to` | first focusable element in the DOM; visible on focus, never `display: none` |
 | `DsVisuallyHidden` | — | the clip-path pattern, not `width: 0` |
 
-Icon set (`design/icons.ts`): `github, linkedin, x, mail, rss, menu, close, sun, moon, monitor,
-arrow-up-right, copy, check` — 24×24 path data as a plain record, roughly 1.5 KB total, no
-network request and no resolver.
+Icon set (`app/design/icons.ts`): `github, linkedin, x, mail, rss, menu, close, sun, moon, monitor,
+arrow-up-right, copy, check` — 24×24 path data in a plain record, roughly 1.5 KB total, no network
+request and no resolver.
 
-Prose components (`components/content/`) restyle MDC output with the same tokens:
-`ProsePre` gets the copy button, a `tabindex="0"` scroll container and an accessible name;
-`ProseA` reuses `DsLink`; `ProseImg` wraps `NuxtImg` with width/height so post images never shift;
-`ProseTable` scrolls inside its own `overflow-x:auto` wrapper.
+Each component is added to `/design-system` as it's built, showing every variant × size × state
+(default / hover / focus-visible / disabled / loading).
 
-### 5.3 Living style guide — `pages/design-system.vue`
+**▶ Review — `/design-system`, both themes, mouse and keyboard**
 
-Every token swatch, every component, every state (default / hover / focus-visible / disabled /
-loading), both themes, on one page. It is the review surface for each gate and the fastest way to
-catch a token that only works in dark mode. `definePageMeta` sets `robots: 'noindex, nofollow'`;
-the route rule in §2 keeps it out of the sitemap and `robots.txt`.
+- [ ] Primary button: ink text on green, in **both** themes — check it doesn't look wrong in light
+- [ ] Secondary and ghost buttons are clearly distinguishable from primary and from each other
+- [ ] Hover, focus and active states are all visibly different from rest
+- [ ] Tab through every control — the focus ring is never clipped by a parent's `overflow`
+- [ ] Button sizes feel right; `sm` is still comfortably tappable
+- [ ] Links are underlined, not just coloured
+- [ ] Badges/tags read as chips without shouting
+- [ ] Card border and surface separate from the canvas without a heavy shadow
+- [ ] Icons are optically aligned with adjacent text, not baseline-floating
 
-**Gate:** the style guide renders every component in every state in both themes; axe is clean on
-`/design-system`; a keyboard walk reaches and escapes every control; no raw ramp class exists
+**Gate:** axe clean on `/design-system`; keyboard walk reaches every control; no raw ramp class
 outside `components/ds/`.
 
----
-
-## 6. Layout and navigation
-
-- `layouts/default.vue`: `DsSkipLink` → `<header>` → `<main id="main">` → `<footer>`.
-  The header is sticky and publishes its height to `--header-h` so §4.3's scroll-padding stays true.
-- `TheHeader.vue`: a plain `<nav aria-label="Main">` with a `<ul>` on desktop; below `md` a
-  `DsButton` toggle opens `TheNavDrawer` (a `DsDialog`). Nav: Home, About, Experience, Skills,
-  Blog, Contact.
-- About / Experience / Skills / Contact are **hash links on `/`** (`/#about`). Blog is a real
-  route. From `/blog/*` the hash links must resolve to `/#about`, not `#about`.
-- Active state: `aria-current="page"` for routes; `useActiveSection.ts` (one
-  `IntersectionObserver`, disconnected on unmount) sets the active section on the home page and
-  mirrors it with `aria-current="true"`. The indicator is a 2 px accent underline **plus** a weight
-  change — never colour alone.
-- The drawer is a native modal dialog: no focus-trap library, no scroll-lock script (the browser
-  makes the page inert), no `aria-modal` hand-wiring.
-- Footer: socials with `rel="me noopener"`, an RSS link, copyright, no dead links.
-
-**Gate:** keyboard-only pass — Tab reaches every nav item, the drawer opens, traps, closes on
-Escape and returns focus to the toggle, the skip link works and lands focus on `<main>`,
-`aria-current` reflects both route and section state.
+**Commits:** `feat(ds): add variant helper and inline icon set` ·
+`feat(ds): add button, link, badge, card and layout primitives`
 
 ---
 
-## 7. Home page sections
+## Phase 4 — Interactive primitives
 
-`pages/index.vue` renders the sections in order; each is a `DsSection` with a stable `id` and a
-single `<h2>`. Only the hero carries the `<h1>`.
+**Goal:** the behavioural components, in isolation, where their edge cases are easy to hit.
 
-1. **Hero** — `DsAvatar` (explicit width/height, `preload`, `fetchpriority="high"`, real `alt`),
-   name as `h1` at `--text-display`, title, intro, two `DsButton`s: "View my work" → `#experience`,
-   "Contact me" → `#contact`. The paired green/sky glow sits behind it as a single gradient layer.
-   One reveal animation on load, `prefers-reduced-motion` aware, and it must not move the LCP
-   element (animate `opacity` only, never `translate` on the heading).
-2. **About** — prose from `app.config`, measure capped at `--container-prose`.
-3. **Experience** — a vertical journey, not a résumé table: role, company, period, one-line
-   contribution, with the 01/02/03 markers. Real `<ol>` — the order is the information. No bullet
+| Component | API | Accessibility contract |
+|---|---|---|
+| `DsDialog` | `open` v-model, `title` | native `<dialog>` + `showModal()` → focus trap, background `inert` and Escape are the browser's job, not ours; `aria-labelledby`; focus returns to the trigger natively; `::backdrop` styled; animated with `@starting-style` + `transition-behavior: allow-discrete`, skipped under reduced motion |
+| `DsThemeToggle` | — | cycles system → light → dark; `aria-label` reflects the *next* state; announcement in a polite live region; fixed dimensions so there's no layout shift |
+| `DsCopyButton` | `value` | `navigator.clipboard` with a silent no-op fallback; "Copied" both announced politely and shown visually |
+| `DsBreadcrumb` | `items[]` | `<nav aria-label="Breadcrumb"><ol>`, last item `aria-current="page"` |
+| `DsSkipLink` | `to` | first focusable element in the DOM; visible on focus, never `display: none` |
+
+Using a native `<dialog>` is what lets us skip a focus-trap library, a scroll-lock script and all
+the hand-wired `aria-modal` bookkeeping — the browser does all of it.
+
+**▶ Review — `/design-system`, keyboard first**
+
+- [ ] Open the dialog: focus lands inside it, Tab cycles **only** within it
+- [ ] Escape closes it and focus returns to the button that opened it
+- [ ] Clicking the backdrop closes it; clicking inside does not
+- [ ] The page behind the dialog cannot be scrolled or clicked
+- [ ] Theme toggle cycles system → light → dark with no layout jump
+- [ ] Copy button gives visible confirmation and reverts
+- [ ] Skip link appears on the first Tab press and is readable
+- [ ] Turn on OS "reduce motion" — dialog appears instantly, nothing animates
+
+**Gate:** axe clean; all of the above pass with the mouse untouched.
+
+**Commit:** `feat(ds): add native dialog, theme toggle and copy button`
+
+---
+
+## Phase 5 — Layout shell
+
+**Goal:** the frame around every page — header, footer, mobile drawer — with stub content inside.
+
+- `layouts/default.vue`: `DsSkipLink` → `<header>` → `<main id="main">` → `<footer>`. The header
+  is sticky and publishes its height to `--header-h` so Phase 2's scroll-padding stays true.
+- `TheHeader.vue`: `<nav aria-label="Main">` with a `<ul>` on desktop; below `md` a `DsButton`
+  toggle opens `TheNavDrawer` (a `DsDialog`). Nav: Home, About, Experience, Skills, Blog, Contact.
+- About / Experience / Skills / Contact are **hash links on `/`** (`/#about`); Blog is a real
+  route. From `/blog/*` those must resolve to `/#about`, not `#about`.
+- Active state: `aria-current="page"` for routes; `useActiveSection.ts` (one `IntersectionObserver`,
+  disconnected on unmount) tracks the visible section on the home page. The indicator is a 2 px
+  accent underline **plus** a weight change — never colour alone.
+- `TheFooter.vue`: socials with `rel="me noopener"`, an RSS link, copyright, no dead links.
+
+**▶ Review — `/`, resize the window across `md`**
+
+- [ ] Desktop nav sits where you'd expect; spacing and weight feel right
+- [ ] Below 768 px the nav collapses to the drawer; nothing overflows
+- [ ] The drawer's open/close animation feels right (or is too slow/fast — say so)
+- [ ] Sticky header behaviour on scroll: does it stay, shrink, or get in the way?
+- [ ] Clicking a hash link scrolls the section clear of the header, not under it
+- [ ] The active-section indicator tracks scrolling accurately and isn't jumpy
+- [ ] Footer feels like an ending, not an afterthought
+
+**Gate:** keyboard-only pass — Tab reaches every nav item; drawer opens, traps, closes on Escape
+and returns focus to the toggle; skip link lands focus on `<main>`; `aria-current` reflects both
+route and section state.
+
+**Commit:** `feat(layout): add header, footer and accessible mobile drawer`
+
+---
+
+## Phase 6 — Hero
+
+**Goal:** the first screen, on its own, because it carries more design risk than the rest of the
+site combined.
+
+`DsAvatar` (explicit width/height, `preload`, `fetchpriority="high"`, real `alt`), name as `h1` at
+`--text-display`, title, intro, two `DsButton`s: "View my work" → `#experience`, "Contact me" →
+`#contact`. The paired green/sky glow sits behind it as a single gradient layer.
+
+One reveal animation on load, `prefers-reduced-motion` aware. It must not move the LCP element:
+animate `opacity` only, never `translate` on the heading — a moving headline is both a CLS risk and
+a worse LCP.
+
+**▶ Review — `/`, desktop and phone width**
+
+- [ ] The name is the first thing you read; the eyebrow doesn't compete with it
+- [ ] Display size is right at 1440 px **and** at 375 px (it's fluid, check both ends)
+- [ ] The glow sits behind the type without reducing its contrast
+- [ ] Green appears exactly once here — the primary button. If it appears twice, tell me
+- [ ] Avatar size and treatment (ring? crop?) is what you want
+- [ ] The two buttons are obviously primary vs secondary
+- [ ] The reveal is quick enough not to feel like a delay
+- [ ] Nothing shifts as the font loads — watch a hard reload closely
+- [ ] With reduce-motion on, it simply appears
+
+**Gate:** axe clean; renders identically with JavaScript disabled; CLS on reload is 0.
+
+**Commit:** `feat(home): add hero section`
+
+---
+
+## Phase 7 — Rest of the home page
+
+**Goal:** the complete home page. Each section is a `DsSection` with a stable `id` and one `<h2>`;
+only the hero carries the `<h1>`.
+
+1. **About** — prose from `app.config`, measure capped at `--container-prose`.
+2. **Experience** — a vertical journey, not a résumé table: role, company, period, one-line
+   contribution, with 01/02/03 markers. A real `<ol>` — the order *is* the information. No bullet
    dumps, no logo grid, no skill bars.
-4. **Skills** — grouped `<ul>`/`<li>` of `DsBadge`. No proficiency percentages: unverifiable,
+3. **Skills** — grouped `<ul>`/`<li>` of `DsBadge`. No proficiency percentages: unverifiable,
    visually noisy, and meaningless to a screen reader.
-5. **Contact** — `mailto:` primary action plus social links. If a form is wanted later, add a Nitro
-   route; do **not** add a third-party form dependency now.
+4. **Contact** — `mailto:` primary action plus social links. If you want a form later, it's a Nitro
+   route; we do not add a third-party form dependency.
 
-**Gate:** axe clean on `/`; heading outline is h1 → h2 × 5 with no skips; the hero renders
-identically with JavaScript disabled; CLS on reload is 0.
+**▶ Review — `/`, scroll the whole page**
+
+- [ ] Section rhythm: is the vertical spacing between sections consistent and enough?
+- [ ] Eyebrow labels read as a system down the page, not as repetition
+- [ ] About measure (~65 characters) is comfortable, not too narrow
+- [ ] Experience reads as a story; the numbering earns its place
+- [ ] Skills grouping makes sense at a glance
+- [ ] Contact gives one obvious action
+- [ ] Green still appears roughly once per screen — count it while scrolling
+- [ ] Order of sections is the order you want them read
+
+**Section order and the Experience treatment are the last cheap structural changes.** After
+Phase 8 they're still possible, just no longer free.
+
+**Gate:** axe clean on `/`; heading outline is h1 → h2 × 5 with no skips; full content present
+with JavaScript disabled.
+
+**Commit:** `feat(home): add about, experience, skills and contact sections`
 
 ---
 
-## 8. Content and blog architecture
+## Phase 8 — Blog
+
+**Goal:** listing, post page, and every markdown element styled in both themes.
 
 ### 8.1 Reading time
 
@@ -586,9 +634,8 @@ const { data: posts } = await useAsyncData('blog-list', () =>
 ```
 
 `select()` is a performance decision, not a style one: without it the prerendered payload for the
-listing carries every post's full body. Render `PostCard` in a responsive grid — whole-card link,
-title as `h2`, description, `<time :datetime>`, reading time, tags. The empty state is a real
-sentence.
+listing carries every post's full body. `PostCard` in a responsive grid — whole-card link, title as
+`h2`, description, `<time :datetime>`, reading time, tags. The empty state is a real sentence.
 
 ### 8.3 Post — `pages/blog/[slug].vue`
 
@@ -601,118 +648,172 @@ if (!post.value) throw createError({ statusCode: 404, statusMessage: 'Post not f
 ```
 
 `DsBreadcrumb` → `<article>` header (h1, `<time>`, reading time, tags) → `<ContentRenderer>`.
-Code blocks use dual-theme Shiki, a copy button and a focusable scroll container. Add one seed post
-exercising every markdown element — it doubles as the render test for §5's prose components.
 
-### 8.4 Tag pages — `pages/blog/tag/[tag].vue`
+### 8.4 Prose components — `app/components/content/`
 
-Prerendered from the union of all post tags (linked from every post and card, so `crawlLinks`
-finds them). Each has a unique title and description, a `CollectionPage` schema, and is a real
-indexable surface. This is the cheapest SEO win available on a small blog: it turns N posts into
-N + T internal landing pages with genuine topical grouping.
+`ProseH2` `ProseH3` `ProseA` `ProsePre` `ProseCode` `ProseImg` `ProseBlockquote` `ProseTable`
+`ProseUl` `ProseOl`, all built from the same tokens. `ProsePre` gets the copy button, a
+`tabindex="0"` scroll container and an accessible name; `ProseA` reuses `DsLink`; `ProseImg` wraps
+`NuxtImg` with width/height so post images never shift; `ProseTable` scrolls inside its own
+`overflow-x:auto` wrapper.
 
-Adding a post = drop a `.md` in `content/blog/`. Nothing else.
+Ship one real post plus one kitchen-sink seed post exercising every markdown element — the seed
+post is the render test for this phase.
 
-**Gate:** the seed post renders every element correctly in light and dark; a bad slug 404s through
-`error.vue`; tag pages prerender and are reachable from posts; typecheck passes.
+Adding a post from here on = drop a `.md` in `content/blog/`. Nothing else.
+
+**▶ Review — `/blog` and the seed post, both themes**
+
+- [ ] Card grid: column count at each width, and whether the whole card is clickable
+- [ ] Post metadata (date, reading time, tags) is legible but secondary
+- [ ] Body measure and line-height are comfortable for a long read
+- [ ] Heading hierarchy inside a post is obvious without reading the words
+- [ ] Code blocks: theme matches the site in **both** modes; long lines scroll, not overflow
+- [ ] Copy button on code blocks works and confirms
+- [ ] Blockquote, table, list and image treatments all feel like the same system
+- [ ] Inline code is distinguishable from surrounding text without being loud
+
+**Gate:** the seed post renders every element correctly in light and dark; a bad slug 404s;
+typecheck passes.
+
+**Commits:** `feat(content): add prose components and reading-time hook` ·
+`feat(blog): add listing and post pages`
 
 ---
 
-## 9. SEO architecture
+## Phase 9 — Tag pages and error page
+
+**Goal:** the last two real surfaces.
+
+- `pages/blog/tag/[tag].vue` — prerendered from the union of all post tags (linked from every post
+  and card, so `crawlLinks` finds them). Unique title and description each. This is the cheapest
+  SEO win available on a small blog: it turns N posts into N + T indexable landing pages with
+  genuine topical grouping.
+- `app/error.vue` — a real 404 with navigation back into the site, `noindex`, and the same shell as
+  every other page. Never a dead end.
+
+**▶ Review — `/blog/tag/<something>` and any bad URL**
+
+- [ ] A tag page looks intentional, not like a filtered leftover
+- [ ] Tag chips on posts navigate to the right page
+- [ ] The 404 is on-brand and offers somewhere to go
+- [ ] A 404 hit from a deep URL still has a working header and footer
+
+**Gate:** tag pages prerender and are reachable from posts; a bad slug renders `error.vue` with
+the right status code.
+
+**Commit:** `feat(blog): add tag pages and branded error page`
+
+---
+
+## Phase 10 — SEO and structured data
+
+**Goal:** every route correctly described to crawlers and social cards.
 
 - `app.vue`: `useHead` with `titleTemplate: '%s · <Name>'` and `htmlAttrs: { lang: 'en' }`.
 - Every page calls `useSeoMeta({ title, description, ogTitle, ogDescription, ogType, ogImage,
   twitterCard: 'summary_large_image' })`. No page ships without a unique title and description —
-  §16's test asserts uniqueness across all prerendered routes.
+  Phase 15's test asserts uniqueness across all prerendered routes.
 - `usePostSeo.ts` takes a post and returns article meta + OG config, so post SEO is one call and
   cannot drift between pages.
-- Canonicals come from `site.url` via `nuxt-seo-utils`; verify on `/`, `/blog`, `/blog/[slug]`,
-  `/blog/tag/[tag]`.
+- Canonicals come from `site.url`; verify on `/`, `/blog`, `/blog/[slug]`, `/blog/tag/[tag]`.
 - OG images: `defineOgImageComponent('OgTemplate')` — one template built from the design tokens
-  (ink base, one green glow, title in Cloud, name in mono green). Baked at build with
-  `zeroRuntime`, so nothing ships to the client.
+  (ink base, one green glow, title in Cloud, name in mono green). Baked at build via `zeroRuntime`.
 - Slugs: lowercase, hyphenated, no dates, no stop-word filler. The filename **is** the slug.
-- `/blog/tag/[tag]` pages get `description` generated from the tag and post count — never an empty
-  or duplicated description.
-- No duplicate content: hash sections must never also exist as standalone routes.
-- `error.vue` returns a real 404 page with navigation back into the site and `noindex`.
+- Structured data via `nuxt-schema-org` — never hand-written JSON-LD:
+  - `app.vue`: `defineWebSite()` + `definePerson({ name, jobTitle, url, image, sameAs })`
+  - `/`: `defineWebPage({ '@type': 'ProfilePage' })` — the accurate type for a personal site, and
+    the one that lets `Person` carry `knowsAbout` from the skills data
+  - `/blog`: `CollectionPage` + `defineBlog()`
+  - `/blog/[slug]`: `defineArticle({ '@type': 'BlogPosting', … })` + `defineBreadcrumb()`
+  - `/blog/tag/[tag]`: `CollectionPage` + breadcrumb
+- Rule: every schema property must correspond to something visible on the page. No invented
+  ratings, no fabricated `wordCount`, no author who isn't credited on screen.
 
-**Gate:** view-source every route type — unique title, unique description, exactly one canonical,
-complete OG + Twitter tags, and full content present in the SSR HTML with JavaScript disabled.
+**▶ Review — view-source, plus a social debugger**
 
----
+- [ ] `/`, `/blog`, a post and a tag page each have a unique `<title>` and description
+- [ ] Exactly one `<link rel="canonical">` per page, pointing at the right URL
+- [ ] The generated OG image looks right — open `/__og-image__/image/blog/<slug>/og.png`
+- [ ] Paste a post URL into an Open Graph debugger: correct title, description, image
+- [ ] Rich Results Test on all four route types: zero errors
 
-## 10. Structured data
+**Gate:** all of the above, plus full content present in the SSR HTML with JavaScript disabled.
 
-Use `nuxt-schema-org` (bundled with `@nuxtjs/seo`) — it handles escaping, `@id` linking and graph
-merging. Never hand-write `<script type="application/ld+json">`.
-
-- `app.vue`: `useSchemaOrg([defineWebSite(), definePerson({ name, jobTitle, url, image, sameAs })])`
-- `pages/index.vue`: `defineWebPage({ '@type': 'ProfilePage' })` — the accurate type for a personal
-  site, and the one that lets `Person` carry `knowsAbout` from the skills data.
-- `pages/blog/index.vue`: `defineWebPage({ '@type': 'CollectionPage' })` + `defineBlog()`
-- `pages/blog/[slug].vue`: `defineArticle({ '@type': 'BlogPosting', headline, description,
-  datePublished, dateModified, image, keywords })` + `defineBreadcrumb([Home, Blog, <title>])`
-- `pages/blog/tag/[tag].vue`: `defineWebPage({ '@type': 'CollectionPage' })` + breadcrumb.
-- Rule: every property must correspond to something visible on the page. No invented ratings, no
-  fabricated `wordCount`, no `author` that is not credited on screen.
-
-**Gate:** each route type passes the Rich Results Test and the Schema Markup Validator with zero
-errors and zero warnings that matter.
+**Commits:** `feat(seo): add per-route meta, canonicals and og image template` ·
+`feat(seo): add person, article and breadcrumb structured data`
 
 ---
 
-## 11. Sitemap, robots and feeds
+## Phase 11 — Feeds, sitemap and robots
+
+**Goal:** the machine-readable surface.
 
 - `@nuxtjs/sitemap` auto-discovers prerendered routes. Confirm `/blog/*` and `/blog/tag/*` are all
   present, that `draft: true` posts are excluded from **both** the collection query and the sitemap
-  source, and that `/design-system` is absent.
-- `lastmod` from `updated ?? date`.
-- `@nuxtjs/robots`: allow everything, point at `/sitemap.xml`, block nothing but `/design-system`.
-- `server/routes/rss.xml.ts` — RSS 2.0 built with `queryCollection(event, 'blog')`, full
-  `<description>`, `<guid isPermaLink="true">`, correct `lastBuildDate`. Linked from `<head>` with
-  `rel="alternate"` and from the footer.
+  source, and that `/design-system` is absent. `lastmod` from `updated ?? date`.
+- `@nuxtjs/robots`: allow everything, point at `/sitemap.xml`, block only `/design-system`.
+- `server/routes/rss.xml.ts` — RSS 2.0 via `queryCollection(event, 'blog')`, full `<description>`,
+  `<guid isPermaLink="true">`, correct `lastBuildDate`. Linked from `<head>` with `rel="alternate"`
+  and from the footer.
 - `server/routes/feed.json.ts` — JSON Feed 1.1, same data.
-- `server/routes/llms.txt.ts` — the site's title, one-line summary, and a markdown list of posts
-  with descriptions. Cheap to generate, and it is becoming the conventional way for LLM crawlers
-  to read a site without guessing at HTML.
+- `server/routes/llms.txt.ts` — title, one-line summary, and a markdown list of posts with
+  descriptions. Cheap, and it's becoming the conventional way for LLM crawlers to read a site
+  without guessing at HTML.
 
-**Gate:** `npm run generate && npx serve .output/public` — `/sitemap.xml`, `/robots.txt`,
-`/rss.xml`, `/feed.json` and `/llms.txt` are all correct and reference the production domain;
-the RSS validates.
+**▶ Review — `npm run generate && npx serve .output/public`**
+
+- [ ] `/sitemap.xml` lists every real route, no drafts, no `/design-system`
+- [ ] `/robots.txt` points at the sitemap and blocks only the style guide
+- [ ] `/rss.xml` opens in a feed reader and shows the right posts
+- [ ] `/feed.json` and `/llms.txt` are well-formed
+- [ ] Every URL uses the production domain, not `localhost`
+
+**Gate:** the RSS validates; all five files are correct against the real `site.url`.
+
+**Commit:** `feat(seo): add sitemap, robots, rss, json feed and llms.txt`
 
 ---
 
-## 12. Accessibility — WCAG 2.2 AA
+## Phase 12 — Accessibility pass (WCAG 2.2 AA)
 
-Non-negotiables, checked at every gate:
+**Goal:** a hardening sweep over everything built, not a new feature.
+
+Non-negotiables:
 
 - Semantic landmarks: one `<header>`, `<nav aria-label>`, `<main>`, `<footer>`; `<article>` per post.
 - One `<h1>` per page; no skipped levels; `<section>` labelled by its own heading.
-- Every interactive element has an accessible name. Icon-only buttons carry `aria-label`.
-- Visible focus everywhere from one `:focus-visible` rule; outlines are never removed.
-- **2.2 — Focus Not Obscured:** `scroll-padding-top`/`scroll-margin-top` must keep the sticky
-  header off any focused element. Test by tabbing through a long post.
-- **2.2 — Target Size:** minimum 24×24 CSS px; we hold ourselves to 44×44 for anything tappable.
-- **2.2 — Dragging Movements / Consistent Help / Redundant Entry:** no drag interactions, no forms
-  — satisfied by construction. Record that, do not silently skip it.
-- Contrast ≥ 4.5:1 body, ≥ 3:1 large text and UI boundaries, in **both** modes — §1's table is the
-  reference, and §4.2's light-mode remapping is what makes it pass.
-- Colour is never the only carrier of meaning (nav active state, link underlines, tag chips).
-- Meaningful `alt` on content images; `alt=""` on decorative ones; `imageAlt` enforced by Zod.
-- `prefers-reduced-motion: reduce` disables the hero reveal, smooth scroll and all transitions.
+- Every interactive element has an accessible name; icon-only buttons carry `aria-label`.
+- Visible focus from one `:focus-visible` rule; outlines are never removed.
+- **2.2 Focus Not Obscured:** `scroll-padding-top` / `scroll-margin-top` keep the sticky header off
+  any focused element. Test by tabbing through a long post.
+- **2.2 Target Size:** minimum 24×24 CSS px; we hold to 44×44 for anything tappable.
+- **2.2 Dragging Movements / Consistent Help / Redundant Entry:** no drag interactions, no forms —
+  satisfied by construction. Record that; don't silently skip it.
+- Contrast ≥ 4.5:1 body, ≥ 3:1 large text and UI boundaries, in **both** modes (Appendix A).
+- Colour is never the only carrier of meaning.
+- `prefers-reduced-motion` disables the hero reveal, smooth scroll and all transitions.
 - `forced-colors: active` keeps every boundary visible.
-- ARIA only where native HTML cannot do it — which, with `<dialog>`, is almost nowhere.
+- ARIA only where native HTML can't do it — which, with `<dialog>`, is nearly nowhere.
 
-**Gate:** axe (automated, §16) clean on `/`, `/blog`, `/blog/[slug]`, `/blog/tag/[tag]`,
-`/design-system` in **both** themes; one full screen-reader pass (NVDA/Firefox or VoiceOver/Safari)
-through nav → hero → a post; a 200 % zoom and a 400 % reflow pass with no horizontal scroll.
+**▶ Review — you drive**
+
+- [ ] Unplug the mouse. Reach every interactive element on every route and back out again
+- [ ] Turn on a screen reader (NVDA/Firefox or VoiceOver/Safari): nav → hero → a post
+- [ ] Zoom to 200 %, then reflow at 400 % — no horizontal scroll, nothing clipped
+- [ ] Windows High Contrast / forced-colors: every border and button is still visible
+- [ ] OS reduce-motion on: nothing animates anywhere
+
+**Gate:** axe clean on `/`, `/blog`, `/blog/[slug]`, `/blog/tag/[tag]`, `/design-system` in **both**
+themes.
+
+**Commit:** `fix(a11y): close wcag 2.2 gaps found in the audit pass`
 
 ---
 
-## 13. Performance
+## Phase 13 — Performance pass
 
-Budgets — these are pass/fail in CI, not aspirations:
+**Goal:** hit the budgets on the built output. These are pass/fail, not aspirations.
 
 | Metric | Budget |
 |---|---|
@@ -723,47 +824,116 @@ Budgets — these are pass/fail in CI, not aspirations:
 | CLS | ≤ 0.02 |
 | INP | ≤ 100 ms |
 | TBT | ≤ 100 ms |
-| Lighthouse Performance / A11y / Best Practices / SEO | ≥ 99 / 100 / 100 / 100 |
+| Lighthouse Perf / A11y / Best Practices / SEO | ≥ 99 / 100 / 100 / 100 |
 
 How we get there:
 
-- Fully prerendered (`nuxi generate`). No client-side data fetching on any route, ever.
-- Payload discipline: `select()` on every list query (§8.2); no full bodies in list payloads.
+- Fully prerendered. No client-side data fetching on any route, ever.
+- Payload discipline: `select()` on every list query; no full bodies in list payloads.
 - `@nuxt/fonts` self-hosts, subsets to Latin, sets `font-display: swap` and generates fallback
   metric overrides (`size-adjust`) so the swap costs no layout shift. Preload only the two weights
-  actually used above the fold.
+  used above the fold.
 - Images through `NuxtImg`/`NuxtPicture`: AVIF + WebP, explicit `width`/`height`, `sizes`,
   `loading="lazy"` everywhere except the hero avatar (`preload`, `fetchpriority="high"`).
-- Reserve space for the avatar and every post image — CLS target is 0.02, which means zero
-  unreserved media.
-- The glow is a gradient, not a blur filter (§1). No `backdrop-filter` anywhere.
-- Client JS is exactly three things: the nav dialog, the theme toggle and the copy button. Nothing
-  else hydrates behaviour. No chart, animation, carousel or icon-runtime library.
-- `prefetchOn: interaction` (§2) plus a **Speculation Rules** script for same-origin
-  `prerender` on `moderate` eagerness — progressive enhancement, ignored by browsers that lack it.
-- Brotli + gzip precompression of every public asset (`compressPublicAssets`).
-- Immutable, year-long cache headers on `/_nuxt/**`; short cache on HTML.
-- `npx nuxi analyze` before every release; anything unexpected in the graph gets removed, not
-  explained away.
+- Space reserved for the avatar and every post image — a 0.02 CLS budget means zero unreserved media.
+- The glow is a gradient, not a blur filter. No `backdrop-filter` anywhere.
+- Client JS is exactly three things: the nav dialog, the theme toggle, the copy button.
+- `prefetchOn: interaction` plus a **Speculation Rules** script for same-origin `prerender` at
+  `moderate` eagerness — progressive enhancement, ignored where unsupported.
+- Brotli + gzip precompression; immutable year-long cache on `/_nuxt/**`, short cache on HTML.
+- `npx nuxi analyze` before release; anything unexpected in the graph gets removed, not explained.
 
-**Gate:** Lighthouse CI on the built output meets every row of the table above, on mobile and
-desktop, for `/`, `/blog` and a post.
+**▶ Review — built output, not dev server**
+
+- [ ] `npm run generate && npx serve .output/public`, then Lighthouse mobile on `/`, `/blog`, a post
+- [ ] Every row of the budget table passes
+- [ ] Throttle to Slow 4G and reload: does the page feel instant?
+- [ ] Watch a cold load for font swap — does any text reflow?
+
+**Gate:** the table above, on mobile and desktop, for all three route types.
+
+**Commit:** `perf: tighten font, image and payload budgets`
 
 ---
 
-## 14. Responsive design
+## Phase 14 — Responsive pass
+
+**Goal:** every route correct at every width.
 
 Mobile-first. Breakpoints: default → `sm` 640 → `md` 768 → `lg` 1024 → `xl` 1280. Page container
-`--container-page` (72rem), prose measure `--container-prose` (65ch). Type scales fluidly via
-`clamp()` (§4.1), so between breakpoints nothing jumps. Test 320, 375, 768 and 1440 px, plus 400 %
-zoom for reflow. Nav collapses to the drawer below `md`. No horizontal scroll at any width —
-including wide code blocks and tables, which scroll inside their own container.
+72rem, prose measure 65ch. Type scales fluidly via `clamp()`, so nothing jumps between breakpoints.
+Nav collapses to the drawer below `md`. No horizontal scroll at any width — including wide code
+blocks and tables, which scroll inside their own container.
+
+**▶ Review — 320 / 375 / 768 / 1440 px, both themes**
+
+- [ ] No horizontal scrollbar at any width, on any route
+- [ ] 320 px: the display heading still fits and still looks deliberate
+- [ ] Grids reflow at sensible points, not just at the breakpoints
+- [ ] Code blocks and tables scroll inside themselves
+- [ ] Touch targets stay ≥ 44 px on phone widths
+- [ ] 400 % zoom reflows to one column and stays usable
 
 **Gate:** manual pass at all four widths in both themes, plus the 400 % reflow check.
 
+**Commit:** `fix(responsive): correct layout at narrow and zoomed widths`
+
 ---
 
-## 15. Content contract
+## Phase 15 — Automated QA and CI
+
+**Goal:** everything reviewed by hand so far becomes a check that runs on every push.
+
+| Check | Command | Asserts |
+|---|---|---|
+| Types | `nuxi typecheck` | zero errors |
+| Lint | `eslint .` + `eslint-plugin-vuejs-accessibility` | a11y rules and the raw-ramp-class ban |
+| Unit | `vitest` | `useFormatDate`, reading-time hook, `usePostSeo` output shape |
+| Build | `nuxi generate` | no warnings; every expected route in `.output/public` |
+| Metadata | node script over `.output/public/**/*.html` | every route has a title, description and one canonical; titles and descriptions unique |
+| A11y | `playwright` + `@axe-core/playwright` | zero violations on 5 routes × 2 themes |
+| Perf | `lhci autorun` against `.output/public` | the Phase 13 budget table |
+| Links | `nuxt-link-checker` | no broken internal links |
+
+```bash
+npm i -D vitest @nuxt/test-utils happy-dom
+npm i -D @playwright/test @axe-core/playwright @lhci/cli
+```
+
+The raw-ramp-class ban is an ESLint `no-restricted-syntax` rule matching
+`/\b(bg|text|border|ring)-(brand|echo|slate|signal|danger)-\d{2,3}\b/` in class attributes, scoped
+to everything except `app/components/ds/**`.
+
+Manual, once per release: screen-reader pass, Rich Results Test, an OG debugger on one post, and a
+JavaScript-disabled read-through.
+
+**▶ Review**
+
+- [ ] `npm run test` and `npm run test:a11y` pass locally
+- [ ] Deliberately break something (remove an `alt`, over-long a description) — CI catches it
+- [ ] CI run time is tolerable
+
+**Gate:** all eight checks green on a clean checkout.
+
+**Commits:** `test: add unit, axe and lighthouse ci checks` ·
+`ci: run typecheck, lint, tests and budgets on every push`
+
+---
+
+## Phase 16 — Deploy
+
+**Goal:** live, on the real domain, with the numbers still holding.
+
+- Static hosting (Netlify, Cloudflare Pages, Vercel or GitHub Pages) — fully prerendered, no server
+  runtime.
+- Set `site.url` to the real domain **before** building; OG images, canonicals, feeds and the
+  sitemap all derive from it.
+- Build `npm run generate`, publish `.output/public`.
+- Headers: immutable year-long cache on `/_nuxt/*`, short cache on HTML,
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a CSP
+  that's realistic for a static site (`default-src 'self'` — there are no third-party origins to
+  allow, because there are none).
+- `README.md` documents the post frontmatter contract so it never has to be re-derived:
 
 ```yaml
 ---
@@ -778,90 +948,161 @@ draft: false
 ---
 ```
 
-Zod rejects anything malformed at build time — that is the point. Ship one real post plus one
-kitchen-sink seed post. Document this contract in `README.md` so it never has to be re-derived.
+**▶ Review — the live URL**
+
+- [ ] Lighthouse against production still meets Phase 13's budgets
+- [ ] HTTPS works and one canonical host redirects to the other (www → apex, or the reverse)
+- [ ] Social preview renders on the platform you actually post to
+- [ ] Sitemap submitted to Search Console
+
+**Gate:** all of the above.
+
+**Commits:** `docs: document the post frontmatter contract` ·
+`chore: configure production headers and deploy target`
 
 ---
 
-## 16. Automated QA
+## Appendix A — Brand reference
 
-Everything here runs in CI on every push; nothing on this list is a "remember to check".
+**Structure of the system:** one vivid colour, one echo, one accent, on ink.
 
-| Check | Command | Asserts |
-|---|---|---|
-| Types | `nuxi typecheck` | zero errors |
-| Lint | `eslint .` with `eslint-plugin-vuejs-accessibility` | a11y rules + the ramp-class ban (§4.2) |
-| Unit | `vitest` | `useFormatDate`, reading-time hook, `usePostSeo` output shape |
-| Build | `nuxi generate` | no warnings; every expected route exists in `.output/public` |
-| Metadata | node script over `.output/public/**/*.html` | every route has a title, a description, one canonical; titles and descriptions are unique |
-| A11y | `playwright` + `@axe-core/playwright` | zero violations on 5 routes × 2 themes |
-| Perf | `lhci autorun` against `.output/public` | the §13 budget table |
-| Links | `nuxt-link-checker` | no broken internal links |
+| Role | Name | Hex | Notes |
+|---|---|---|---|
+| Primary | Nuxt Green | `#00DC82` | ramp step 400 |
+| Primary deep | Pine | `#00A155` | ramp step 600 — hover on dark |
+| Secondary | Sky | `#38BDF8` | ramp step 400 |
+| Secondary deep | Deep Sky | `#0284C7` | ramp step 600 |
+| Accent | Signal Amber | `#FBBF24` | emphasis only, ~2 % of the surface |
+| Base | Nuxt Ink | `#020420` | never `#000` |
+| Surface | Slate Deep | `#0F172A` | cards, raised panels |
+| Border | Hairline | `#1E293B` | 1 px rules |
+| Muted text | Mist | `#94A3B8` | captions, metadata |
+| Paper | Cloud | `#F8FAFC` | headings on dark, canvas on light |
 
-Manual, once per release: screen-reader pass, Rich Results Test, an Open Graph debugger on one
-post URL, and a JavaScript-disabled read-through.
+**Proportion:** ink + surface ≈ 60 %, cloud + mist type ≈ 30 %, green ≈ 8 % (one element per
+screen), sky + amber ≈ 2 %.
 
-`lighthouserc.json` encodes the budgets as assertions so a regression fails the build rather than
-being noticed later.
+**Measured contrast** (from the source file):
+
+| Colour | On | Ratio | Verdict |
+|---|---|---|---|
+| Nuxt Green | Ink | 11.1:1 | PASS |
+| Sky | Ink | 9.4:1 | PASS |
+| Signal Amber | Ink | 12.1:1 | PASS |
+| Mist | Ink | 7.9:1 | PASS |
+| Nuxt Green | White | 1.8:1 | **FAIL** |
+| Sky | White | 2.1:1 | **FAIL** |
+| Green 700 | White | 5.1:1 | PASS |
+| Sky 700 | White | 5.9:1 | PASS |
+
+This is why the semantic layer splits `accent` (fills, `#00DC82` in both themes with ink text) from
+`accent-text` (steps down to the 700 value in light mode).
+
+**Guardrails.** Never green body text. Never a 50/50 green/sky split. No green→sky gradients.
+Amber for emphasis only. Never pure black. Never more than three colours in one composition.
+
+**Signature device.** Mono-set, letter-spaced, uppercase eyebrow labels above every section
+heading, plus the paired green/sky glow behind the hero. One device, used consistently; nothing
+else decorative. Numbered markers (01/02/03) appear only on Experience, where order is
+chronological and therefore means something.
+
+**Type.** Two families: **Inter Variable** (UI, body, and display headings at weight 800 with
+`-0.035em` tracking) and **JetBrains Mono** (eyebrows, dates, reading time, code). The personality
+comes from the mono eyebrow, the tight display sizing and the glow — not from a third font. A
+display face can be swapped in later, but it costs a font file and must re-pass Phase 13's budget.
 
 ---
 
-## 17. Production build and deployment
+## Appendix B — File map
 
-- Target static hosting (Netlify, Cloudflare Pages, Vercel or GitHub Pages) — the site is fully
-  prerendered, so there is no server runtime.
-- Set `site.url` to the real domain **before** building; OG images, canonicals, feeds and the
-  sitemap all derive from it.
-- Build `npm run generate`, publish `.output/public`.
-- Headers: immutable year-long cache on `/_nuxt/*`, short cache on HTML, `X-Content-Type-Options`,
-  `Referrer-Policy: strict-origin-when-cross-origin`, and a CSP that is realistic for a static site
-  (`default-src 'self'`, no third-party origins to allow, because there are none).
-- Post-deploy: re-run Lighthouse against the live URL, submit the sitemap to Search Console,
-  confirm HTTPS plus a single canonical host (www → apex or the reverse — pick one).
+Built up across phases; this is the end state.
+
+```
+app/
+  app.vue                          # P1
+  error.vue                        # P9
+  app.config.ts                    # P2
+  assets/css/
+    main.css tokens.css base.css   # P2
+  components/
+    ds/                            # P3–P4 — no app data, no fetching
+      DsButton DsLink DsBadge DsCard DsIcon DsContainer DsSection DsEyebrow DsAvatar
+      DsVisuallyHidden DsDialog DsThemeToggle DsCopyButton DsBreadcrumb DsSkipLink
+    content/                       # P8 — MDC prose overrides
+      ProseH2 ProseH3 ProseA ProsePre ProseCode ProseImg ProseBlockquote ProseTable ProseUl ProseOl
+    layout/  TheHeader TheFooter TheNavDrawer        # P5
+    home/    HeroSection AboutSection ExperienceSection SkillsSection ContactSection  # P6–P7
+    blog/    PostCard PostMeta TagList               # P8
+    seo/     OgTemplate                              # P10
+  composables/
+    useActiveSection.ts  useFormatDate.ts            # P5
+    usePostSeo.ts  useSiteSchema.ts                  # P10
+  design/  variants.ts  icons.ts                     # P3
+  layouts/default.vue                                # P5
+  pages/
+    index.vue                      # P5 stub → P6–P7
+    design-system.vue              # P2, grows through P4
+    blog/index.vue blog/[slug].vue # P8
+    blog/tag/[tag].vue             # P9
+content/blog/*.md                  # P8
+server/routes/  rss.xml.ts  feed.json.ts  llms.txt.ts   # P11
+public/  img/  favicon.ico  site.webmanifest
+tests/  unit/*.spec.ts  e2e/a11y.spec.ts             # P15
+content.config.ts                  # P2
+lighthouserc.json playwright.config.ts eslint.config.mjs  # P15
+```
+
+Structural rules:
+
+- `pages/` composes and fetches; `components/home/*` and `components/blog/*` render props;
+  `components/ds/*` know nothing about this site's content.
+- `app.config.ts` holds data. No fetching in presentational components.
+- Nothing in `components/ds/` imports `app.config` or `#content`.
 
 ---
 
-## 18. Git workflow and commit ladder
+## Appendix C — Commit ladder
 
-Conventional Commits, present tense, one logical change per commit. The subject says what changed;
-the body says why, when why is not obvious. Feature work happens on a branch off `main`.
+Conventional Commits, present tense, one logical change per commit, committed only after the
+phase's review is approved.
 
 | # | Commit | Phase |
 |---|---|---|
 | 1 | `chore: initialize repository with nuxt/node ignore rules` | — |
-| 2 | `docs: add NUXTWIND brand colour system source` | §1 |
+| 2 | `docs: add NUXTWIND brand colour system source` | — |
 | 3 | `docs: add initial implementation plan` | — |
-| 4 | `docs: rework plan around a first-party design system` | §1–18 |
-| 5 | `chore: scaffold nuxt 4 app with tailwind v4, content and seo modules` | §2 |
-| 6 | `chore: lay out app, design-system and content directories` | §3 |
-| 7 | `feat(ds): add colour, type and shape tokens from the brand system` | §4.1–4.2 |
-| 8 | `feat(ds): add base layer with focus, motion and forced-colors handling` | §4.3 |
-| 9 | `feat: add typed site config and content collection schema` | §4.4–4.5 |
-| 10 | `feat(ds): add variant helper and inline icon set` | §5.1 |
-| 11 | `feat(ds): add button, link, badge, card and layout primitives` | §5.2 |
-| 12 | `feat(ds): add native dialog, theme toggle and copy button` | §5.2 |
-| 13 | `docs(ds): add living style guide route` | §5.3 |
-| 14 | `feat(layout): add header, footer and accessible mobile drawer` | §6 |
-| 15 | `feat(home): add hero, about, experience, skills and contact sections` | §7 |
-| 16 | `feat(content): add prose components and reading-time hook` | §8.1 |
-| 17 | `feat(blog): add listing, post and tag pages` | §8.2–8.4 |
-| 18 | `feat(seo): add per-route meta, canonicals and og image template` | §9 |
-| 19 | `feat(seo): add person, article and breadcrumb structured data` | §10 |
-| 20 | `feat(seo): add sitemap, robots, rss, json feed and llms.txt` | §11 |
-| 21 | `fix(a11y): close wcag 2.2 gaps found in the audit pass` | §12 |
-| 22 | `perf: tighten font, image and payload budgets` | §13 |
-| 23 | `test: add unit, axe and lighthouse ci checks` | §16 |
-| 24 | `ci: run typecheck, lint, tests and budgets on every push` | §16 |
-| 25 | `docs: document the post frontmatter contract` | §15 |
-| 26 | `chore: configure production headers and deploy target` | §17 |
+| 4 | `docs: rework plan around a first-party design system` | — |
+| 5 | `docs: restructure plan into reviewable phases` | — |
+| 6 | `chore: scaffold nuxt 4 app with tailwind v4, content and seo modules` | 1 |
+| 7 | `feat(ds): add colour, type and shape tokens from the brand system` | 2 |
+| 8 | `feat(ds): add base layer with focus, motion and forced-colors handling` | 2 |
+| 9 | `feat: add typed site config and content collection schema` | 2 |
+| 10 | `docs(ds): add living style guide route` | 2 |
+| 11 | `feat(ds): add variant helper and inline icon set` | 3 |
+| 12 | `feat(ds): add button, link, badge, card and layout primitives` | 3 |
+| 13 | `feat(ds): add native dialog, theme toggle and copy button` | 4 |
+| 14 | `feat(layout): add header, footer and accessible mobile drawer` | 5 |
+| 15 | `feat(home): add hero section` | 6 |
+| 16 | `feat(home): add about, experience, skills and contact sections` | 7 |
+| 17 | `feat(content): add prose components and reading-time hook` | 8 |
+| 18 | `feat(blog): add listing and post pages` | 8 |
+| 19 | `feat(blog): add tag pages and branded error page` | 9 |
+| 20 | `feat(seo): add per-route meta, canonicals and og image template` | 10 |
+| 21 | `feat(seo): add person, article and breadcrumb structured data` | 10 |
+| 22 | `feat(seo): add sitemap, robots, rss, json feed and llms.txt` | 11 |
+| 23 | `fix(a11y): close wcag 2.2 gaps found in the audit pass` | 12 |
+| 24 | `perf: tighten font, image and payload budgets` | 13 |
+| 25 | `fix(responsive): correct layout at narrow and zoomed widths` | 14 |
+| 26 | `test: add unit, axe and lighthouse ci checks` | 15 |
+| 27 | `ci: run typecheck, lint, tests and budgets on every push` | 15 |
+| 28 | `docs: document the post frontmatter contract` | 16 |
+| 29 | `chore: configure production headers and deploy target` | 16 |
+
+Review feedback that arrives during a phase is folded into that phase's commits. Feedback that
+arrives after a phase is approved gets its own `fix(...)` or `style(...)` commit on top — the
+ladder stays readable either way.
 
 ---
-
-## Execution order summary
-
-1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11, then 12–14 as a hardening pass over everything built,
-then 15 → 16 → 17. Do not defer SEO, structured data, accessibility or performance to the end —
-phases 9, 10, 12 and 13 are written into each earlier gate on purpose.
 
 Bias throughout: use the platform first, then Nuxt, then our own design system. A new dependency
 needs a reason that survives being asked "can the browser already do this?" — which is how the nav
