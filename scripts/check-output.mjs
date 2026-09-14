@@ -57,6 +57,28 @@ const EXPECTATIONS = [
     ],
   },
   {
+    route: '/blog/tag/accessibility',
+    file: `${DIST}/blog/tag/accessibility/index.html`,
+    contains: [
+      ['tag heading', /accessibility/],
+      ['post cards rendered', /ds-card-link/],
+      ['breadcrumb', /<nav aria-label="Breadcrumb"/],
+    ],
+  },
+  {
+    // Nuxt writes an empty SPA shell here by default; scripts/static-404.mjs replaces it with
+    // the prerendered route. If that step is skipped the file still exists and still returns
+    // 404, it is just blank without JavaScript — which no build error would reveal.
+    route: '/404.html (static, not the SPA shell)',
+    file: `${DIST}/404.html`,
+    contains: [
+      ['rendered heading', /This page does not exist/],
+      ['header landmark', /<header/],
+      ['footer landmark', /<footer/],
+      ['noindex', /name="robots" content="noindex/],
+    ],
+  },
+  {
     route: '/design-system',
     file: `${DIST}/design-system/index.html`,
     contains: [

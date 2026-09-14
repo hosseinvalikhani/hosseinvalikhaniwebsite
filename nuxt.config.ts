@@ -112,7 +112,8 @@ export default defineNuxtConfig({
       failOnError: true,
       // Routes are added as the phases that create them land: /blog (P8),
       // /rss.xml + /feed.json + /llms.txt (P11), /404.html (P9).
-      routes: ['/'],
+      // /404 is not linked from anywhere, so the crawler cannot discover it.
+      routes: ['/', '/404'],
     },
   },
 

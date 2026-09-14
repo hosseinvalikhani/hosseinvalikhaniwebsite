@@ -41,7 +41,7 @@ useSeoMeta({
 
         <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3">
           <PostMeta :date="post.date" :reading-time="post.readingTime" />
-          <TagList :tags="post.tags ?? []" size="sm" />
+          <TagList :tags="post.tags ?? []" size="sm" linked />
         </div>
       </header>
 

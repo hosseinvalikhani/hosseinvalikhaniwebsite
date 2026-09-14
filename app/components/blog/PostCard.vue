@@ -35,7 +35,7 @@ const { post } = defineProps<{
       <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
         <PostMeta :date="post.date" :reading-time="post.readingTime" />
         <div class="relative z-10">
-          <TagList :tags="post.tags ?? []" size="sm" />
+          <TagList :tags="post.tags ?? []" size="sm" linked />
         </div>
       </div>
     </div>
