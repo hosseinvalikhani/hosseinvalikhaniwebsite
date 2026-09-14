@@ -125,7 +125,7 @@ export default defineNuxtConfig({
 
   site: { url: 'https://example.com', name: '<Name>', defaultLocale: 'en' },
 
-  colorMode: { classSuffix: '', preference: 'dark', fallback: 'dark', storageKey: 'ds-theme' },
+  colorMode: { classSuffix: '', preference: 'system', fallback: 'dark', storageKey: 'ds-theme' },
 
   content: {
     build: {
@@ -171,6 +171,10 @@ Why these specifically:
   data for no measurable benefit on a site this small.
 - `failOnError: true` — a broken prerender must break the build, not ship half a site.
 - `classSuffix: ''` puts `.dark` / `.light` on `<html>`, which is what Phase 2's tokens target.
+  `preference: 'system'` honours the visitor's OS setting on a first visit; `fallback: 'dark'`
+  is what they get when it can't be read, since the brand is designed for ink.
+- `devtools: { enabled: false }` — Nuxt DevTools 3.4.2 and Vite 8 disagree over
+  `applyToEnvironment` hooks and print a WARN on every dev start. Re-enable when that is fixed.
 - `ogImage.zeroRuntime` — OG images are baked at build; no Satori runtime reaches the client.
 - Fonts are self-hosted, so there are no third-party origins and no `preconnect`.
 
