@@ -85,7 +85,13 @@ const rootClass = computed(() => {
   return classes({ variant: props.variant, size: props.size }, extra.join(' '))
 })
 
-const isExternal = computed(() => !!props.href)
+/**
+ * Only http(s) targets actually open a tab. A mailto: or tel: href hands off to a mail client
+ * or dialler, so giving it target="_blank" is meaningless and announcing "opens in a new tab"
+ * is simply untrue — the kind of wrong label that teaches people to distrust the ones that
+ * are right.
+ */
+const opensNewTab = computed(() => !!props.href && /^https?:/.test(props.href))
 
 const component = computed(() => {
   if (props.to) return resolveComponent('NuxtLink')
@@ -101,7 +107,9 @@ const attrs = computed(() => {
   // Left alone, the hero alone contributed two more elements claiming to be the current page.
   if (props.to) return { to: props.to, ariaCurrentValue: 'false' }
   if (props.href) {
-    return { href: props.href, target: '_blank', rel: 'noopener noreferrer' }
+    return opensNewTab.value
+      ? { href: props.href, target: '_blank', rel: 'noopener noreferrer' }
+      : { href: props.href }
   }
   return {
     type: props.type,
@@ -140,7 +148,7 @@ const attrs = computed(() => {
 
     <DsIcon v-if="props.iconEnd && !props.iconOnly" :name="props.iconEnd" :size="props.size === 'sm' ? 18 : 20" />
 
-    <DsVisuallyHidden v-if="isExternal">
+    <DsVisuallyHidden v-if="opensNewTab">
       (opens in a new tab)
     </DsVisuallyHidden>
   </component>

@@ -35,7 +35,14 @@ const year = new Date().getFullYear()
                 class="inline-flex size-11 items-center justify-center rounded-control text-fg-muted transition-colors duration-fast hover:bg-raised hover:text-fg"
               >
                 <DsIcon :name="social.icon as never" />
-                <DsVisuallyHidden>{{ social.label }}</DsVisuallyHidden>
+                <!--
+                  The icon is aria-hidden, so this label *is* the link's accessible name — and
+                  the new-tab notice has to be part of it, or these links announce identically
+                  to the in-page ones while behaving differently.
+                -->
+                <DsVisuallyHidden>
+                  {{ social.label }}{{ social.href.startsWith('http') ? ' (opens in a new tab)' : '' }}
+                </DsVisuallyHidden>
               </NuxtLink>
             </li>
           </ul>

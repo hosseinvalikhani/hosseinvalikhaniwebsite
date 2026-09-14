@@ -221,6 +221,73 @@
     animation: ds-reveal var(--duration-slow) var(--ease-out-quint) var(--ds-reveal-delay, 0ms) backwards;
   }
 
+  /*
+    The experience timeline.
+
+    The rule and the dots are drawn with pseudo-elements on the list items rather than as
+    markup, so the accessibility tree stays a plain ordered list — decoration should not be
+    announced. `list-style: none` on a styled <ol> silently removes list semantics in Safari
+    with VoiceOver, so the role is restated explicitly on the list itself.
+
+    The rule stops at the last item instead of running past it, which is what makes it read as
+    a finished journey rather than a truncated one.
+  */
+  .ds-timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .ds-timeline__item {
+    position: relative;
+    padding-inline-start: 2rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .ds-timeline__item:last-child {
+    padding-bottom: 0;
+  }
+
+  /* The connecting rule. */
+  .ds-timeline__item::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0.3125rem;
+    top: 1.25rem;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--ds-hairline);
+  }
+
+  .ds-timeline__item:last-child::before {
+    display: none;
+  }
+
+  /* The node. The first entry is the current one, so it carries the accent. */
+  .ds-timeline__item::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0.5rem;
+    width: 0.6875rem;
+    height: 0.6875rem;
+    border-radius: 50%;
+    border: 2px solid var(--ds-hairline-strong);
+    background-color: var(--ds-canvas);
+  }
+
+  .ds-timeline__item:first-child::after {
+    border-color: var(--ds-accent);
+    background-color: var(--ds-accent);
+  }
+
+  @media (forced-colors: active) {
+    .ds-timeline__item::after {
+      border-color: CanvasText;
+      background-color: CanvasText;
+    }
+  }
+
   .ds-glow {
     position: relative;
     isolation: isolate;

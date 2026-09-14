@@ -76,18 +76,42 @@ export default defineAppConfig({
     { label: 'Contact', to: '/#contact' },
   ] satisfies NavItem[],
 
+  // Newest first — the section renders them in this order and numbers them accordingly.
   experience: [
     {
-      role: 'PLACEHOLDER Role',
+      role: 'PLACEHOLDER Senior Role',
       company: 'PLACEHOLDER Company',
       period: '2023 — present',
       from: '2023-01',
-      contribution: 'PLACEHOLDER — one line on what you actually changed here.',
+      contribution:
+        'PLACEHOLDER — one or two lines on what you actually changed here. Concrete beats '
+        + 'impressive: what shipped, what got faster, what stopped breaking.',
+    },
+    {
+      role: 'PLACEHOLDER Mid Role',
+      company: 'PLACEHOLDER Previous Company',
+      period: '2020 — 2023',
+      from: '2020-04',
+      to: '2023-01',
+      contribution:
+        'PLACEHOLDER — the second entry exists so the vertical rhythm and the connecting rule '
+        + 'can be judged with more than one item on screen.',
+    },
+    {
+      role: 'PLACEHOLDER First Role',
+      company: 'PLACEHOLDER First Company',
+      period: '2018 — 2020',
+      from: '2018-09',
+      to: '2020-04',
+      contribution: 'PLACEHOLDER — where it started.',
     },
   ] satisfies ExperienceEntry[],
 
   skills: [
-    { label: 'PLACEHOLDER Group', items: ['PLACEHOLDER', 'PLACEHOLDER', 'PLACEHOLDER'] },
+    { label: 'PLACEHOLDER Languages', items: ['Kotlin', 'TypeScript', 'Swift', 'SQL'] },
+    { label: 'PLACEHOLDER Platform', items: ['Android', 'Jetpack Compose', 'Coroutines', 'Room'] },
+    { label: 'PLACEHOLDER Web', items: ['Vue', 'Nuxt', 'Tailwind CSS'] },
+    { label: 'PLACEHOLDER Practice', items: ['Testing', 'CI/CD', 'Accessibility', 'Code review'] },
   ] satisfies SkillGroup[],
 
   socials: [
