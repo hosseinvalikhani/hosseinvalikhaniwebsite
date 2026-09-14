@@ -69,6 +69,30 @@
   produce the same soft field for free, and can be painted on a pseudo-element behind content.
 */
 @layer components {
+  /*
+    Stretched card link. Put this on the link that should own a whole DsCard — normally the
+    title — and its ::after covers the card. One tab stop, and the accessible name is the
+    title rather than every word in the card.
+
+    The focus ring has to be moved onto the ::after box: the anchor itself is only as big as
+    its text, so its own ring would draw in the wrong place.
+  */
+  .ds-card-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-card);
+  }
+
+  .ds-card-link:focus-visible {
+    outline: none;
+  }
+
+  .ds-card-link:focus-visible::after {
+    outline: 2px solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
   .ds-glow {
     position: relative;
     isolation: isolate;

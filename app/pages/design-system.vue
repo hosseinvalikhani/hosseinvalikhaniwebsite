@@ -9,9 +9,14 @@
  * It is the one documented place allowed to reference raw ramp values — it exists to display
  * them. Everywhere else, semantic utilities only.
  */
+import { icons, type IconName } from '~/design/icons'
+
 definePageMeta({ robots: 'noindex, nofollow' })
 
 useHead({ title: 'Design system' })
+
+const { profile } = useAppConfig()
+const iconNames = Object.keys(icons) as IconName[]
 
 const colorMode = useColorMode()
 const modes = ['system', 'light', 'dark'] as const
@@ -534,10 +539,185 @@ const proportion = [
         </div>
       </section>
 
+      <!-- ── Buttons ────────────────────────────────────────────── -->
+      <section aria-labelledby="buttons" class="border-t border-hairline py-14">
+        <p class="font-mono text-eyebrow text-accent-text uppercase">
+          09 — buttons
+        </p>
+        <h2 id="buttons" class="mt-4 text-2xl">
+          Four variants, three sizes
+        </h2>
+        <p class="mt-3 max-w-prose text-fg-muted">
+          Always a real <code class="font-mono text-accent-text">&lt;button&gt;</code> or link,
+          never a clickable div. Everything except the inline <em>link</em> variant holds a
+          44×44 minimum target — WCAG 2.2 asks for 24×24, this is our own stricter bar.
+        </p>
+
+        <div class="mt-8 space-y-8">
+          <div v-for="v in (['primary', 'secondary', 'ghost', 'link'] as const)" :key="v">
+            <h3 class="font-mono text-eyebrow text-fg-subtle uppercase">
+              {{ v }}
+            </h3>
+            <div class="mt-3 flex flex-wrap items-center gap-3">
+              <DsButton :variant="v" size="sm">
+                Small
+              </DsButton>
+              <DsButton :variant="v" size="md">
+                Medium
+              </DsButton>
+              <DsButton :variant="v" size="lg">
+                Large
+              </DsButton>
+              <DsButton :variant="v" icon="mail">
+                With icon
+              </DsButton>
+              <DsButton :variant="v" icon-end="arrow-up-right">
+                Icon end
+              </DsButton>
+              <DsButton :variant="v" disabled>
+                Disabled
+              </DsButton>
+              <DsButton :variant="v" loading>
+                Loading
+              </DsButton>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-mono text-eyebrow text-fg-subtle uppercase">
+              Icon only — the type requires a label
+            </h3>
+            <div class="mt-3 flex flex-wrap items-center gap-3">
+              <DsButton icon-only icon="github" label="GitHub profile" variant="secondary" />
+              <DsButton icon-only icon="copy" label="Copy to clipboard" variant="ghost" />
+              <DsButton icon-only icon="close" label="Close" variant="secondary" size="sm" />
+            </div>
+            <p class="mt-3 text-sm text-fg-subtle">
+              Inspect one: the icon is <code class="font-mono">aria-hidden</code> and the name
+              comes from <code class="font-mono">aria-label</code>. Omitting the label is a
+              TypeScript error, not a review finding.
+            </p>
+          </div>
+
+          <div>
+            <h3 class="font-mono text-eyebrow text-fg-subtle uppercase">
+              As links
+            </h3>
+            <div class="mt-3 flex flex-wrap items-center gap-3">
+              <DsButton to="/" variant="secondary" icon-end="arrow-up-right">
+                Internal route
+              </DsButton>
+              <DsButton href="https://nuxt.com" variant="ghost">
+                External
+              </DsButton>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Links & badges ─────────────────────────────────────── -->
+      <section aria-labelledby="links" class="border-t border-hairline py-14">
+        <p class="font-mono text-eyebrow text-accent-text uppercase">
+          10 — links & badges
+        </p>
+        <h2 id="links" class="mt-4 text-2xl">
+          Underlined, not just coloured
+        </h2>
+
+        <p class="mt-6 max-w-prose text-lg text-fg-muted">
+          A paragraph containing <DsLink to="/design-system">an internal link</DsLink>, an
+          <DsLink to="https://nuxt.com" show-external-icon>external one</DsLink>, and
+          <DsLink to="mailto:hello@example.com">an email address</DsLink> — which opens a handler
+          rather than a tab, so it is not announced as one.
+        </p>
+
+        <div class="mt-8 flex flex-wrap items-center gap-2">
+          <DsBadge>neutral</DsBadge>
+          <DsBadge variant="accent">accent</DsBadge>
+          <DsBadge variant="echo">echo</DsBadge>
+          <DsBadge size="sm">small</DsBadge>
+          <DsBadge variant="accent" size="sm">small accent</DsBadge>
+        </div>
+      </section>
+
+      <!-- ── Cards ──────────────────────────────────────────────── -->
+      <section aria-labelledby="cards" class="border-t border-hairline py-14">
+        <p class="font-mono text-eyebrow text-accent-text uppercase">
+          11 — cards
+        </p>
+        <h2 id="cards" class="mt-4 text-2xl">
+          One tab stop per card
+        </h2>
+        <p class="mt-3 max-w-prose text-fg-muted">
+          <strong class="font-semibold text-fg">Tab into the second card.</strong> The focus ring
+          should trace the whole card, not just the title — the title link owns the card through
+          a stretched <code class="font-mono">::after</code>, so there is exactly one stop and
+          the accessible name is the title rather than every word inside.
+        </p>
+
+        <div class="mt-8 grid gap-5 sm:grid-cols-2">
+          <DsCard>
+            <h3 class="text-xl font-bold">
+              Static card
+            </h3>
+            <p class="mt-2 text-fg-muted">
+              A plain surface. Nothing here is focusable, so nothing pretends to be.
+            </p>
+          </DsCard>
+
+          <DsCard interactive>
+            <h3 class="text-xl font-bold">
+              <NuxtLink to="/design-system" class="ds-card-link">
+                Linked card
+              </NuxtLink>
+            </h3>
+            <p class="mt-2 text-fg-muted">
+              The whole surface is clickable, and the hover state says so.
+            </p>
+            <div class="mt-4 flex gap-2">
+              <DsBadge size="sm">tag</DsBadge>
+              <DsBadge size="sm">another</DsBadge>
+            </div>
+          </DsCard>
+        </div>
+      </section>
+
+      <!-- ── Avatar ─────────────────────────────────────────────── -->
+      <section aria-labelledby="avatar" class="border-t border-hairline py-14">
+        <p class="font-mono text-eyebrow text-accent-text uppercase">
+          12 — avatar & icons
+        </p>
+        <h2 id="avatar" class="mt-4 text-2xl">
+          Reserved space, thirteen icons
+        </h2>
+
+        <div class="mt-8 flex flex-wrap items-center gap-8">
+          <DsAvatar :src="profile.photo" alt="" :size="120" />
+          <div>
+            <p class="max-w-prose text-fg-muted">
+              Width and height are always explicit, so the box is reserved before the image
+              arrives. The avatar sits at the top of the hero, which makes it the largest CLS
+              risk on the site.
+            </p>
+          </div>
+        </div>
+
+        <ul class="mt-8 flex flex-wrap gap-3">
+          <li
+            v-for="name in iconNames"
+            :key="name"
+            class="flex min-w-24 flex-col items-center gap-2 rounded-panel border border-hairline bg-surface p-3"
+          >
+            <DsIcon :name="name" :size="22" />
+            <span class="font-mono text-[0.65rem] text-fg-subtle">{{ name }}</span>
+          </li>
+        </ul>
+      </section>
+
       <footer class="border-t border-hairline py-10">
         <p class="text-sm text-fg-subtle">
-          Components land here in Phases 3 and 4 — buttons, links, badges, cards, then the
-          dialog, theme toggle and copy button.
+          The interactive primitives — dialog, theme toggle, copy button, breadcrumb and skip
+          link — land here in Phase 4.
         </p>
       </footer>
     </div>
