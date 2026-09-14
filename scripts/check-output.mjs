@@ -39,6 +39,21 @@ const EXPECTATIONS = [
     contains: [
       ['header landmark', /<header/],
       ['main landmark', /<main id="main"/],
+      ['post cards rendered', /ds-card-link/],
+      ['reading time injected', /\d+ min read/],
+    ],
+  },
+  {
+    route: '/blog/markdown-kitchen-sink',
+    file: `${DIST}/blog/markdown-kitchen-sink/index.html`,
+    contains: [
+      ['breadcrumb', /<nav aria-label="Breadcrumb"/],
+      // Prose overrides resolve by bare name at render time; if the registration is wrong,
+      // Content silently falls back to its own defaults and nothing errors.
+      ['custom ProseH2', /<h2 id="[^"]*" class="group /],
+      ['keyboard-scrollable code block', /<pre tabindex="0" role="region"/],
+      ['keyboard-scrollable table', /role="region" aria-label="Table"/],
+      ['syntax highlighting', /shiki-themes/],
     ],
   },
   {
@@ -61,6 +76,34 @@ const RULES = [
   {
     name: 'at most one aria-current="page"',
     test: html => (html.match(/aria-current="page"/g) ?? []).length <= 1,
+  },
+  {
+    // A srcset whose largest candidate is a handful of pixels means the page ships a blurred
+    // smear where an image should be. @nuxt/image produces this silently when `sizes` uses a
+    // unit it cannot resolve, so the generated markup is the only place it is visible.
+    name: 'no degenerate image candidates in srcset',
+    test: (html) => {
+      const srcsets = html.match(/srcset="[^"]*"/g) ?? []
+      return srcsets.every((set) => {
+        const widths = [...set.matchAll(/ (\d+)w/g)].map(m => Number(m[1]))
+        return widths.length === 0 || Math.max(...widths) >= 64
+      })
+    },
+  },
+  {
+    // An <img> with no width/height reserves no space, so everything below it jumps when the
+    // image arrives. Markdown cannot express dimensions, so this is easy to forget and
+    // invisible until someone loads the page on a slow connection.
+    name: 'every image declares width and height',
+    // Attributes are space-separated, so a leading space is a sufficient word boundary.
+    // It also avoids the backslash-b word-boundary escape, which collapses to a literal
+    // backspace character in most string contexts. That is not theoretical: this rule was
+    // first written with it, the pattern then matched no <img> at all, and .every() over an
+    // empty array reported a pass. A check that silently matches nothing is worse than none.
+    test: (html) => {
+      const images = html.match(/<img\s[^>]*>/g) ?? []
+      return images.every(tag => / width="/.test(tag) && / height="/.test(tag))
+    },
   },
 ]
 
