@@ -17,6 +17,7 @@ useHead({ title: 'Design system' })
 
 const { profile } = useAppConfig()
 const iconNames = Object.keys(icons) as IconName[]
+const dialogOpen = ref(false)
 
 const colorMode = useColorMode()
 const modes = ['system', 'light', 'dark'] as const
@@ -183,8 +184,12 @@ const proportion = [
 </script>
 
 <template>
-  <main class="min-h-dvh bg-canvas text-fg">
-    <div class="mx-auto max-w-page px-6 py-16">
+  <div>
+    <DsSkipLink to="#main" />
+
+    <!-- tabindex="-1" is what lets focus actually land here when the skip link is followed. -->
+    <main id="main" tabindex="-1" class="min-h-dvh bg-canvas text-fg focus-visible:outline-none">
+      <div class="mx-auto max-w-page px-6 py-16">
       <!-- ── Header ─────────────────────────────────────────────── -->
       <header class="ds-glow pb-12">
         <p class="font-mono text-eyebrow text-accent-text uppercase">
@@ -625,7 +630,7 @@ const proportion = [
         </h2>
 
         <p class="mt-6 max-w-prose text-lg text-fg-muted">
-          A paragraph containing <DsLink to="/design-system">an internal link</DsLink>, an
+          A paragraph containing <DsLink to="/">an internal link</DsLink>, an
           <DsLink to="https://nuxt.com" show-external-icon>external one</DsLink>, and
           <DsLink to="mailto:hello@example.com">an email address</DsLink> — which opens a handler
           rather than a tab, so it is not announced as one.
@@ -667,7 +672,7 @@ const proportion = [
 
           <DsCard interactive>
             <h3 class="text-xl font-bold">
-              <NuxtLink to="/design-system" class="ds-card-link">
+              <NuxtLink to="/" class="ds-card-link">
                 Linked card
               </NuxtLink>
             </h3>
@@ -714,12 +719,133 @@ const proportion = [
         </ul>
       </section>
 
+      <!-- ── Dialog ─────────────────────────────────────────────── -->
+      <section aria-labelledby="dialog" class="border-t border-hairline py-14">
+        <p class="font-mono text-eyebrow text-accent-text uppercase">
+          13 — dialog
+        </p>
+        <h2 id="dialog" class="mt-4 text-2xl">
+          The browser does the hard part
+        </h2>
+        <p class="mt-3 max-w-prose text-fg-muted">
+          A native <code class="font-mono text-accent-text">&lt;dialog&gt;</code> opened with
+          <code class="font-mono text-accent-text">showModal()</code>. The focus trap, the
+          background going <code class="font-mono">inert</code>, Escape to dismiss, returning
+          focus to the trigger and the top layer are all the browser's — which is why there is no
+          focus-trap library in this project.
+        </p>
+
+        <ul class="mt-6 max-w-prose list-disc space-y-1 pl-5 text-sm text-fg-muted">
+          <li>Open it, then press <kbd class="font-mono text-fg">Tab</kbd> repeatedly — focus must never leave the dialog</li>
+          <li>Press <kbd class="font-mono text-fg">Escape</kbd> — it closes and focus returns to the button below</li>
+          <li>Click the dark backdrop — it closes; click inside — it does not</li>
+          <li>Try to scroll or click the page behind it — you cannot</li>
+          <li>With OS reduce-motion on, it appears instantly</li>
+        </ul>
+
+        <div class="mt-8">
+          <DsButton variant="secondary" @click="dialogOpen = true">
+            Open dialog
+          </DsButton>
+        </div>
+
+        <DsDialog v-model:open="dialogOpen" title="A native dialog">
+          <p class="text-fg-muted">
+            Everything that makes this accessible is behaviour the platform already has. The
+            component is about forty lines, and most of them are comments explaining why there
+            is nothing else here.
+          </p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <DsButton size="sm" @click="dialogOpen = false">
+              Confirm
+            </DsButton>
+            <DsButton size="sm" variant="ghost" @click="dialogOpen = false">
+              Cancel
+            </DsButton>
+            <DsLink to="https://nuxt.com">
+              A focusable link
+            </DsLink>
+          </div>
+        </DsDialog>
+      </section>
+
+      <!-- ── Theme toggle & copy ────────────────────────────────── -->
+      <section aria-labelledby="controls" class="border-t border-hairline py-14">
+        <p class="font-mono text-eyebrow text-accent-text uppercase">
+          14 — stateful controls
+        </p>
+        <h2 id="controls" class="mt-4 text-2xl">
+          Theme toggle and copy button
+        </h2>
+
+        <div class="mt-8 grid gap-5 sm:grid-cols-2">
+          <DsCard>
+            <h3 class="text-xl font-bold">
+              Theme toggle
+            </h3>
+            <p class="mt-2 text-sm text-fg-muted">
+              Cycles system → light → dark. The label names the <em>next</em> state, because
+              that is what pressing it does. Three states, not two — collapsing "system" into a
+              binary means you can never hand the choice back to your OS.
+            </p>
+            <div class="mt-4">
+              <DsThemeToggle />
+            </div>
+          </DsCard>
+
+          <DsCard>
+            <h3 class="text-xl font-bold">
+              Copy button
+            </h3>
+            <p class="mt-2 text-sm text-fg-muted">
+              Confirms both visibly and in a polite live region. Clipboard access can be denied
+              or unavailable, so failure is reported rather than assumed away.
+            </p>
+            <div class="mt-4">
+              <DsCopyButton value="npx nuxi@latest init" label="Copy command" />
+            </div>
+          </DsCard>
+        </div>
+      </section>
+
+      <!-- ── Breadcrumb & skip link ─────────────────────────────── -->
+      <section aria-labelledby="navigation" class="border-t border-hairline py-14">
+        <p class="font-mono text-eyebrow text-accent-text uppercase">
+          15 — navigation aids
+        </p>
+        <h2 id="navigation" class="mt-4 text-2xl">
+          Breadcrumb and skip link
+        </h2>
+
+        <div class="mt-8 rounded-card border border-hairline bg-surface p-6">
+          <DsBreadcrumb
+            :items="[
+              { label: 'Home', to: '/' },
+              { label: 'Design system', to: '/design-system' },
+              { label: 'Navigation aids' },
+            ]"
+          />
+          <p class="mt-4 text-sm text-fg-muted">
+            The last crumb is text, not a link, and carries
+            <code class="font-mono">aria-current="page"</code>. Separators are CSS-adjacent
+            text marked <code class="font-mono">aria-hidden</code> so they are never read aloud.
+          </p>
+        </div>
+
+        <p class="mt-8 max-w-prose text-fg-muted">
+          The skip link is the very first focusable element on this page. <strong class="font-semibold text-fg">Press
+            Tab once from the top</strong> — it should slide into view at the top-left, and
+          activating it should move focus to the main content.
+        </p>
+      </section>
+
       <footer class="border-t border-hairline py-10">
         <p class="text-sm text-fg-subtle">
-          The interactive primitives — dialog, theme toggle, copy button, breadcrumb and skip
-          link — land here in Phase 4.
+          The design system is complete. Phase 5 assembles it into the real page shell — header,
+          footer and the mobile nav drawer built on the dialog above.
         </p>
-      </footer>
-    </div>
-  </main>
+        </footer>
+      </div>
+    </main>
+  </div>
 </template>

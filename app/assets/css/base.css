@@ -93,6 +93,70 @@
     outline-offset: 2px;
   }
 
+  /*
+    Native <dialog>. Lives here rather than in a scoped block because ::backdrop is a
+    pseudo-element of the dialog and scoped-style attribute selectors do not reach it.
+
+    Animating a dialog needs `display` and `overlay` in the transition list with
+    `allow-discrete`: both are discrete properties, and without this the element would flip
+    straight to display:none and cut the exit animation off mid-way. @starting-style supplies
+    the "before it was shown" values, which is the only way to animate something entering the
+    top layer.
+  */
+  .ds-dialog {
+    margin: auto;
+    width: min(32rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 4rem);
+    padding: 0;
+    border: 1px solid var(--ds-hairline);
+    border-radius: var(--radius-panel);
+    background-color: var(--ds-surface);
+    color: var(--ds-fg);
+    opacity: 0;
+    translate: 0 0.5rem;
+    transition:
+      opacity var(--duration-base) var(--ease-out-quint),
+      translate var(--duration-base) var(--ease-out-quint),
+      display var(--duration-base) allow-discrete,
+      overlay var(--duration-base) allow-discrete;
+  }
+
+  .ds-dialog[open] {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  @starting-style {
+    .ds-dialog[open] {
+      opacity: 0;
+      translate: 0 0.5rem;
+    }
+  }
+
+  .ds-dialog__panel {
+    padding: 1.5rem;
+  }
+
+  .ds-dialog::backdrop {
+    background-color: color-mix(in oklab, #020420 70%, transparent);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition:
+      opacity var(--duration-base) var(--ease-out-quint),
+      display var(--duration-base) allow-discrete,
+      overlay var(--duration-base) allow-discrete;
+  }
+
+  .ds-dialog[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+    .ds-dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
   .ds-glow {
     position: relative;
     isolation: isolate;
