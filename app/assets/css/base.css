@@ -288,6 +288,26 @@
     }
   }
 
+  /*
+    Shiki dual-theme fallback.
+
+    Nuxt Content emits `html .shiki span { color: var(--shiki-default) }` with an
+    `html.dark` override, so the light theme is its no-class default. Ours is the opposite:
+    bare :root is dark, which is what a visitor with JavaScript disabled gets, since the class
+    is only ever stamped by script. Without this rule that visitor reads github-light syntax
+    colours on a near-black background.
+
+    Matching :not(.light) rather than .dark keeps the two defaults aligned: no class means
+    dark for the tokens and dark for the code.
+  */
+  html:not(.light) .shiki span {
+    color: var(--shiki-dark);
+    background: var(--shiki-dark-bg);
+    font-style: var(--shiki-dark-font-style);
+    font-weight: var(--shiki-dark-font-weight);
+    text-decoration: var(--shiki-dark-text-decoration);
+  }
+
   .ds-glow {
     position: relative;
     isolation: isolate;

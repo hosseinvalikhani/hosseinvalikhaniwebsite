@@ -31,6 +31,10 @@ export default defineNuxtConfig({
     { path: '~/components/layout', pathPrefix: false },
     { path: '~/components/home', pathPrefix: false },
     { path: '~/components/blog', pathPrefix: false },
+    // MDC resolves prose overrides by their bare name (ProseH2, ProsePre) at render time, so
+    // these must be registered globally and without a prefix or Content silently falls back
+    // to its own defaults.
+    { path: '~/components/content', pathPrefix: false, global: true },
     '~/components',
   ],
 
@@ -42,6 +46,28 @@ export default defineNuxtConfig({
   // preference 'system' honours the visitor's OS setting on a first visit; fallback 'dark' is
   // what they get when that setting can't be read, since the brand is designed for ink.
   colorMode: { classSuffix: '', preference: 'system', fallback: 'dark', storageKey: 'ds-theme' },
+
+  hooks: {
+    /**
+     * Reading time. Nuxt Content has no built-in support, and a client-side word count would
+     * mean shipping the post body to the listing page just to count it.
+     *
+     * The line ending has to be tolerated rather than assumed: authoring happens on Windows,
+     * so a `\r\n` after the opening `---` is normal and a `/^---\n/` pattern would silently
+     * match nothing, leaving readingTime undefined on every post with no error anywhere.
+     */
+    'content:file:beforeParse'(ctx) {
+      // Content v3 passes a context object, not the file itself — v2 passed the file, and the
+      // difference shows up as "cannot read properties of undefined" rather than a type error.
+      const file = ctx.file
+      if (!file?.id?.endsWith('.md') || typeof file.body !== 'string') return
+
+      const words = file.body.split(/\s+/).filter(Boolean).length
+      const minutes = Math.max(1, Math.ceil(words / 200))
+
+      file.body = file.body.replace(/^---\r?\n/, match => `${match}readingTime: ${minutes}\n`)
+    },
+  },
 
   content: {
     build: {
