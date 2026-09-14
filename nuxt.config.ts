@@ -29,6 +29,8 @@ export default defineNuxtConfig({
   components: [
     { path: '~/components/ds', pathPrefix: false },
     { path: '~/components/layout', pathPrefix: false },
+    { path: '~/components/home', pathPrefix: false },
+    { path: '~/components/blog', pathPrefix: false },
     '~/components',
   ],
 

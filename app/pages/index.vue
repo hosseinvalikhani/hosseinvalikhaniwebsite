@@ -1,10 +1,7 @@
 <script setup lang="ts">
 /**
- * Phase 5 shell test.
- *
- * The sections are stubs with the right ids and headings so the header's active-section
- * tracking, the hash-link scroll offset and the overall vertical rhythm are all reviewable
- * now. Phase 6 replaces the hero; Phase 7 fills the rest with real content.
+ * The home page composes sections; it does not render them. Phase 7 replaces the remaining
+ * stubs with AboutSection, ExperienceSection, SkillsSection and ContactSection.
  */
 const { profile } = useAppConfig()
 
@@ -16,26 +13,7 @@ useSeoMeta({
 
 <template>
   <div>
-    <!-- Hero — rebuilt properly in Phase 6. -->
-    <section class="ds-glow py-20 sm:py-28">
-      <DsContainer>
-        <DsEyebrow>Phase 5 · layout shell</DsEyebrow>
-        <h1 class="mt-6 text-display">
-          {{ profile.name }}
-        </h1>
-        <p class="mt-6 max-w-prose text-xl text-fg-muted">
-          {{ profile.intro }}
-        </p>
-        <div class="mt-10 flex flex-wrap gap-3">
-          <DsButton to="/#experience">
-            View my work
-          </DsButton>
-          <DsButton to="/#contact" variant="secondary">
-            Contact me
-          </DsButton>
-        </div>
-      </DsContainer>
-    </section>
+    <HeroSection />
 
     <DsSection id="about" eyebrow="01 — about" heading="About">
       <p class="max-w-prose text-lg text-fg-muted">

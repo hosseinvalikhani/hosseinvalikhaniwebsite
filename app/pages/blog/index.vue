@@ -1,10 +1,9 @@
 <script setup lang="ts">
 /**
- * Phase 5 stub.
+ * Phase 5 stub, kept until Phase 8 builds the real listing.
  *
- * The nav links here, and crawlLinks + failOnError mean a missing route fails the build — which
- * is exactly the behaviour we want, so this exists rather than the link being removed.
- * Phase 8 replaces it with the real listing.
+ * It carries its own <h1> rather than a DsSection: every page needs exactly one top-level
+ * heading, and a page whose highest heading is an <h2> has a broken outline.
  */
 useSeoMeta({
   title: 'Blog',
@@ -13,10 +12,16 @@ useSeoMeta({
 </script>
 
 <template>
-  <DsSection id="blog" eyebrow="Blog" heading="Writing" :level="2">
-    <p class="max-w-prose text-lg text-fg-muted">
-      The listing, post pages and prose components arrive in Phase 8. This stub exists so the
-      header's Blog link resolves and the shell can be reviewed as a whole.
-    </p>
-  </DsSection>
+  <section class="py-16 sm:py-24">
+    <DsContainer>
+      <DsEyebrow>Blog</DsEyebrow>
+      <h1 class="mt-4 text-3xl">
+        Writing
+      </h1>
+      <p class="mt-6 max-w-prose text-lg text-fg-muted">
+        The listing, post pages and prose components arrive in Phase 8. This stub exists so the
+        header's Blog link resolves and the shell can be reviewed as a whole.
+      </p>
+    </DsContainer>
+  </section>
 </template>

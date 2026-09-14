@@ -33,11 +33,21 @@ const sectionIds = nav
 const isHome = computed(() => route.path === '/')
 const activeSection = useActiveSection(sectionIds)
 
-function isActive(to: string) {
-  if (!to.includes('#')) return undefined
-  // Section state only means anything on the page the sections are on.
-  if (!isHome.value) return undefined
-  return to.split('#')[1] === activeSection.value ? 'true' : undefined
+/**
+ * Vue Router treats every `/#section` link as exact-active while you are on `/`, because it
+ * ignores the hash when matching — so all five nav items were rendering aria-current="page"
+ * at once, each claiming to be the current location.
+ *
+ * Rather than fight that, we supply the *value* the router should stamp: "true" for the
+ * section actually in view and "false" for the rest. Both are valid ARIA, and off the home
+ * page these links are not exact-active so no attribute is rendered at all.
+ *
+ * Route links (Blog) keep the default "page", which is correct for a real navigation target.
+ */
+function currentValue(to: string) {
+  if (!to.includes('#')) return 'page'
+  if (!isHome.value) return 'page'
+  return to.split('#')[1] === activeSection.value ? 'true' : 'false'
 }
 
 onMounted(() => {
@@ -79,7 +89,7 @@ watch(() => route.fullPath, () => { drawerOpen.value = false })
               <li v-for="item in nav" :key="item.to">
                 <NuxtLink
                   :to="item.to"
-                  :aria-current="isActive(item.to)"
+                  :aria-current-value="currentValue(item.to)"
                   class="ds-nav-link rounded-chip px-3 py-2 text-sm transition-colors duration-fast"
                 >
                   {{ item.label }}

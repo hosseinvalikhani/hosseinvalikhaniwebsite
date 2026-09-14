@@ -94,7 +94,12 @@ const component = computed(() => {
 })
 
 const attrs = computed(() => {
-  if (props.to) return { to: props.to }
+  // aria-current marks the current item *within a set of related items* — a nav list, a
+  // breadcrumb, a paginated series. A standalone call to action is not such a set, but Vue
+  // Router stamps aria-current="page" on any exact-active link regardless, and on the home
+  // page a "/#contact" button counts as exact-active because matching ignores the hash.
+  // Left alone, the hero alone contributed two more elements claiming to be the current page.
+  if (props.to) return { to: props.to, ariaCurrentValue: 'false' }
   if (props.href) {
     return { href: props.href, target: '_blank', rel: 'noopener noreferrer' }
   }

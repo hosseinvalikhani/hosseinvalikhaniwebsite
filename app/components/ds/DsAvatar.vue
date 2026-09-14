@@ -31,7 +31,7 @@ const { src, alt, size = 160, priority = false } = defineProps<{
       :preload="priority"
       :loading="priority ? 'eager' : 'lazy'"
       :fetchpriority="priority ? 'high' : undefined"
-      sizes="160px"
+      :sizes="`${size}px`"
       class="size-full rounded-full bg-raised object-cover"
     />
   </span>

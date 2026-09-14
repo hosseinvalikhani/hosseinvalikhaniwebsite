@@ -195,6 +195,32 @@
     scale: 1 1;
   }
 
+  /*
+    The one page-load reveal.
+
+    Opacity only — never translate. A heading that slides into place is both a layout-shift
+    risk and a slower Largest Contentful Paint, and it is applied only to supporting elements:
+    the h1 and the avatar are the LCP candidates and are never faded, because LCP is recorded
+    when an element is first painted at a visible opacity.
+
+    `backwards` fill keeps the element hidden during its delay rather than flashing in and out.
+    The global prefers-reduced-motion rule collapses the duration and caps iterations, so this
+    lands on its final frame immediately rather than being skipped into a broken state.
+  */
+  @keyframes ds-reveal {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  .ds-reveal {
+    animation: ds-reveal var(--duration-slow) var(--ease-out-quint) var(--ds-reveal-delay, 0ms) backwards;
+  }
+
   .ds-glow {
     position: relative;
     isolation: isolate;
