@@ -31,6 +31,8 @@ const EXPECTATIONS = [
       ['hero h1', /<h1[^>]*>/],
       ['hero actions', /View my work/],
       ['about section', /id="about"/],
+      ['og image', /property="og:image"/],
+      ['ProfilePage schema', /"ProfilePage"/],
     ],
   },
   {
@@ -54,6 +56,10 @@ const EXPECTATIONS = [
       ['keyboard-scrollable code block', /<pre tabindex="0" role="region"/],
       ['keyboard-scrollable table', /role="region" aria-label="Table"/],
       ['syntax highlighting', /shiki-themes/],
+      ['article schema', /"BlogPosting"/],
+      // The article must point at the site-wide Person rather than restating it inline.
+      ['author linked to the site identity', /"author":\{"@id":"[^"]*#identity"\}/],
+      ['og:type article', /property="og:type" content="article"/],
     ],
   },
   {
@@ -91,6 +97,28 @@ const EXPECTATIONS = [
 
 /** Structural rules that must hold on every indexable page. */
 const RULES = [
+  {
+    // A page with no canonical, or with two, is the most common way a prerendered site ends up
+    // competing with itself in search results.
+    name: 'exactly one canonical link',
+    test: html => (html.match(/rel="canonical"/g) ?? []).length === 1,
+  },
+  {
+    // One merged graph, not several disconnected ones. nuxt-schema-org assigns stable @ids and
+    // merges every page's additions; several blocks would mean something bypassed it.
+    name: 'exactly one JSON-LD block, and it parses',
+    test: (html) => {
+      const blocks = html.match(/<script type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/g) ?? []
+      if (blocks.length !== 1) return false
+      try {
+        JSON.parse(blocks[0].replace(/^[^>]*>/, '').replace(/<\/script>$/, ''))
+        return true
+      }
+      catch {
+        return false
+      }
+    },
+  },
   {
     name: 'exactly one <h1>',
     test: html => (html.match(/<h1[\s>]/g) ?? []).length === 1,
