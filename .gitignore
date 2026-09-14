@@ -1,0 +1,30 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# nuxt / nitro build output
+.nuxt
+.output
+.data
+dist
+.nitro
+.cache
+
+# environment
+.env
+.env.*
+!.env.example
+
+# test & audit artifacts
+coverage
+.lighthouseci
+playwright-report
+test-results
+
+# editor / os
+.DS_Store
+Thumbs.db
+*.log
+.vscode/*
+!.vscode/extensions.json
+.idea
