@@ -15,12 +15,28 @@ const { data: posts } = await useAsyncData('blog-list', () =>
     .all(),
 )
 
+const description
+  = 'Notes on design systems, accessibility and building for the web — written while working '
+    + 'things out rather than after the fact.'
+
 useSeoMeta({
   title: 'Blog',
-  description:
-    'Notes on design systems, accessibility and building for the web — written while working '
-    + 'things out rather than after the fact.',
+  description,
+  ogTitle: 'Blog',
+  ogDescription: description,
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
 })
+
+defineOgImageComponent('Default', {
+  title: 'Writing',
+  name: useAppConfig().profile.name,
+  label: 'Blog',
+})
+
+useSchemaOrg([
+  defineWebPage({ '@type': 'CollectionPage' }),
+])
 </script>
 
 <template>

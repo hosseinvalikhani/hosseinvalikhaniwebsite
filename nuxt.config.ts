@@ -92,10 +92,13 @@ export default defineNuxtConfig({
     ],
   },
 
-  // Off until Phase 10 builds the OG template. Enabling it early only emits renderer and
-  // font-resolution warnings for images nothing links to yet. Phase 10 turns this into
-  // `{ zeroRuntime: true, fonts: ['Inter:700', 'Inter:800'] }` — baked at build, no client runtime.
-  ogImage: { enabled: false },
+  // zeroRuntime: images are baked during prerender, so none of the rendering machinery reaches
+  // the client. The fonts have to be declared explicitly — Satori has no access to the CSS or
+  // to the self-hosted @nuxt/fonts files, and silently falls back to a default face otherwise.
+  ogImage: {
+    zeroRuntime: true,
+    defaults: { width: 1200, height: 630 },
+  },
 
   experimental: {
     payloadExtraction: true,

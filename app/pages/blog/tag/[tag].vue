@@ -43,12 +43,37 @@ const count = computed(() => data.value?.posts.length ?? 0)
 // Tags are shown exactly as authored rather than title-cased: "css" would become "Css" and
 // "design-systems" would need a word list to split correctly. Quoting the tag instead lets the
 // title read properly whatever spelling the author used.
+const title = computed(() => `Posts tagged "${label.value}"`)
+const description = computed(() =>
+  `${count.value} ${count.value === 1 ? 'post' : 'posts'} tagged "${label.value}" — writing on `
+  + 'design systems, accessibility and building for the web.',
+)
+
 useSeoMeta({
-  title: `Posts tagged "${label.value}"`,
-  description: () =>
-    `${count.value} ${count.value === 1 ? 'post' : 'posts'} tagged "${label.value}" — writing on `
-    + 'design systems, accessibility and building for the web.',
+  title,
+  description,
+  ogTitle: title,
+  ogDescription: description,
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
 })
+
+defineOgImageComponent('Default', {
+  title: label.value,
+  name: useAppConfig().profile.name,
+  label: 'Tagged',
+})
+
+useSchemaOrg([
+  defineWebPage({ '@type': 'CollectionPage' }),
+  defineBreadcrumb({
+    itemListElement: [
+      { name: 'Home', item: '/' },
+      { name: 'Blog', item: '/blog' },
+      { name: label.value, item: tagPath(label.value) },
+    ],
+  }),
+])
 </script>
 
 <template>

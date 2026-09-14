@@ -17,10 +17,9 @@ if (!post.value) {
   throw createError({ statusCode: 404, statusMessage: 'Post not found', fatal: true })
 }
 
-useSeoMeta({
-  title: post.value.title,
-  description: post.value.description,
-})
+// One call: article meta, OG image and the BlogPosting + breadcrumb graph, so post SEO cannot
+// drift between here and anywhere else a post is rendered.
+usePostSeo(post.value)
 </script>
 
 <template>
