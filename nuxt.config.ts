@@ -20,10 +20,15 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   vite: { plugins: [tailwindcss()] },
 
-  // Files in components/ds already carry the Ds prefix, so turn off the directory prefix that
-  // would otherwise make them DsDsButton.
+  // Files in these directories already carry their own prefix (DsButton, TheHeader), so turn
+  // off the directory prefix that would otherwise make them DsDsButton and LayoutTheHeader.
+  //
+  // Getting this wrong fails *silently* in a production build: Vue's "failed to resolve
+  // component" warning is dev-only, so an unregistered <TheHeader /> renders as an empty
+  // comment node and the build still reports success.
   components: [
     { path: '~/components/ds', pathPrefix: false },
+    { path: '~/components/layout', pathPrefix: false },
     '~/components',
   ],
 

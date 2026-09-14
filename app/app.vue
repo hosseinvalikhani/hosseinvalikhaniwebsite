@@ -1,4 +1,14 @@
+<script setup lang="ts">
+const { profile } = useAppConfig()
+
+useHead({
+  titleTemplate: title => (title ? `${title} · ${profile.name}` : profile.name),
+  htmlAttrs: { lang: 'en' },
+})
+</script>
+
 <template>
-  <!-- The real shell — skip link, header, main, footer — arrives with layouts/default.vue in Phase 5. -->
-  <NuxtPage />
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>

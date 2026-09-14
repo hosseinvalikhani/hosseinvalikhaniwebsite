@@ -184,12 +184,7 @@ const proportion = [
 </script>
 
 <template>
-  <div>
-    <DsSkipLink to="#main" />
-
-    <!-- tabindex="-1" is what lets focus actually land here when the skip link is followed. -->
-    <main id="main" tabindex="-1" class="min-h-dvh bg-canvas text-fg focus-visible:outline-none">
-      <div class="mx-auto max-w-page px-6 py-16">
+  <div class="mx-auto max-w-page px-6 py-16">
       <!-- ── Header ─────────────────────────────────────────────── -->
       <header class="ds-glow pb-12">
         <p class="font-mono text-eyebrow text-accent-text uppercase">
@@ -833,7 +828,7 @@ const proportion = [
         </div>
 
         <p class="mt-8 max-w-prose text-fg-muted">
-          The skip link is the very first focusable element on this page. <strong class="font-semibold text-fg">Press
+          The skip link lives in the layout and is the very first focusable element on every page. <strong class="font-semibold text-fg">Press
             Tab once from the top</strong> — it should slide into view at the top-left, and
           activating it should move focus to the main content.
         </p>
@@ -844,8 +839,6 @@ const proportion = [
           The design system is complete. Phase 5 assembles it into the real page shell — header,
           footer and the mobile nav drawer built on the dialog above.
         </p>
-        </footer>
-      </div>
-    </main>
+    </footer>
   </div>
 </template>

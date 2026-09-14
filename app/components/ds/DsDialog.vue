@@ -25,13 +25,19 @@ const { title, describedBy } = defineProps<{
 const dialog = useTemplateRef<HTMLDialogElement>('dialog')
 const titleId = useId()
 
-watch(open, (isOpen) => {
+function sync(isOpen: boolean) {
   const el = dialog.value
   if (!el) return
   // Guard both ways: calling showModal() on an already-open dialog throws.
   if (isOpen && !el.open) el.showModal()
   else if (!isOpen && el.open) el.close()
-})
+}
+
+watch(open, sync)
+
+// A lazily-mounted dialog is created with `open` already true, so the watcher above never
+// fires for the first open. Without this the element exists but is never shown.
+onMounted(() => sync(open.value))
 
 /** Escape and form-method=dialog both fire `close`, so sync the model from the element. */
 function onClose() {

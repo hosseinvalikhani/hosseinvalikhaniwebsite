@@ -157,6 +157,44 @@
     }
   }
 
+  /*
+    Nav link state.
+
+    The indicator is an underline *and* a colour and weight change, never colour alone —
+    "which item is current" must survive being viewed without colour perception. The underline
+    is a pseudo-element rather than text-decoration so it can sit clear of the descenders and
+    animate width without reflowing the label.
+  */
+  .ds-nav-link {
+    position: relative;
+    color: var(--ds-fg-muted);
+  }
+
+  .ds-nav-link:hover {
+    color: var(--ds-fg);
+  }
+
+  .ds-nav-link::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0.75rem;
+    bottom: 0.25rem;
+    height: 2px;
+    border-radius: 2px;
+    background-color: var(--ds-accent);
+    scale: 0 1;
+    transition: scale var(--duration-base) var(--ease-out-quint);
+  }
+
+  .ds-nav-link[aria-current] {
+    color: var(--ds-fg);
+    font-weight: 600;
+  }
+
+  .ds-nav-link[aria-current]::after {
+    scale: 1 1;
+  }
+
   .ds-glow {
     position: relative;
     isolation: isolate;
