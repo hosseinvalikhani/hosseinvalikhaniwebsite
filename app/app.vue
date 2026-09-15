@@ -4,6 +4,12 @@ const { profile, socials } = useAppConfig()
 useHead({
   titleTemplate: title => (title ? `${title} · ${profile.name}` : profile.name),
   htmlAttrs: { lang: 'en' },
+  link: [
+    // Feed autodiscovery. Readers and browser extensions look for this in <head>; a feed that
+    // exists but is not announced here is one that has to be guessed at by URL.
+    { rel: 'alternate', type: 'application/rss+xml', title: `${profile.name} — RSS`, href: '/rss.xml' },
+    { rel: 'alternate', type: 'application/feed+json', title: `${profile.name} — JSON Feed`, href: '/feed.json' },
+  ],
 })
 
 /**

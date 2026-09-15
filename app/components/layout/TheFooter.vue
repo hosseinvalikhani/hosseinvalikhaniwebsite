@@ -45,6 +45,16 @@ const year = new Date().getFullYear()
                 </DsVisuallyHidden>
               </NuxtLink>
             </li>
+            <li>
+              <NuxtLink
+                to="/rss.xml"
+                external
+                class="inline-flex size-11 items-center justify-center rounded-control text-fg-muted transition-colors duration-fast hover:bg-raised hover:text-fg"
+              >
+                <DsIcon name="rss" />
+                <DsVisuallyHidden>RSS feed</DsVisuallyHidden>
+              </NuxtLink>
+            </li>
           </ul>
         </nav>
       </div>

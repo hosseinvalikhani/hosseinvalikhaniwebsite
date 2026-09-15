@@ -115,10 +115,14 @@ export default defineNuxtConfig({
       failOnError: true,
       // Routes are added as the phases that create them land: /blog (P8),
       // /rss.xml + /feed.json + /llms.txt (P11), /404.html (P9).
-      // /404 is not linked from anywhere, so the crawler cannot discover it.
-      routes: ['/', '/404'],
+      // Nothing links to these, so the crawler cannot discover them on its own.
+      routes: ['/', '/404', '/rss.xml', '/feed.json', '/llms.txt'],
     },
   },
+
+  // Nothing but the style guide is disallowed; it is a development surface with no reason to
+  // be indexed, and it is the only route excluded from the sitemap.
+  robots: { disallow: ['/design-system'] },
 
   routeRules: {
     '/_nuxt/**': { headers: { 'cache-control': 'public,max-age=31536000,immutable' } },

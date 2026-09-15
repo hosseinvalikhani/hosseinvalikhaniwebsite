@@ -32,6 +32,7 @@ const EXPECTATIONS = [
       ['hero actions', /View my work/],
       ['about section', /id="about"/],
       ['og image', /property="og:image"/],
+      ['feed autodiscovery', /rel="alternate" type="application\/rss\+xml"/],
       ['ProfilePage schema', /"ProfilePage"/],
     ],
   },
@@ -85,6 +86,42 @@ const EXPECTATIONS = [
     ],
   },
   {
+    route: '/rss.xml',
+    file: `${DIST}/rss.xml`,
+    contains: [
+      ['rss root', /<rss version="2\.0"/],
+      // Without atom:self some aggregators cannot identify a feed after a domain change and
+      // re-deliver every item as new.
+      ['atom self link', /rel="self"/],
+      ['absolute item links', /<link>https:\/\//],
+      ['no unresolved site url', /^(?!.*localhost)[\s\S]*$/],
+    ],
+  },
+  {
+    route: '/feed.json',
+    file: `${DIST}/feed.json`,
+    contains: [
+      ['json feed 1.1', /jsonfeed\.org\/version\/1\.1/],
+      ['absolute item ids', /"id":"https:\/\//],
+    ],
+  },
+  {
+    route: '/llms.txt',
+    file: `${DIST}/llms.txt`,
+    contains: [
+      ['heading', /^# /],
+      ['posts section', /## Posts/],
+    ],
+  },
+  {
+    route: '/robots.txt',
+    file: `${DIST}/robots.txt`,
+    contains: [
+      ['sitemap reference', /Sitemap: https:\/\//],
+      ['style guide disallowed', /Disallow: \/design-system/],
+    ],
+  },
+  {
     route: '/design-system',
     file: `${DIST}/design-system/index.html`,
     contains: [
@@ -95,7 +132,13 @@ const EXPECTATIONS = [
   },
 ]
 
-/** Structural rules that must hold on every indexable page. */
+/**
+ * Structural rules that must hold on every indexable HTML page.
+ *
+ * They are applied only to files ending in .html — running "exactly one <h1>" against
+ * rss.xml or robots.txt produces failures that are noise, and noise is how a failing check
+ * gets ignored.
+ */
 const RULES = [
   {
     // A page with no canonical, or with two, is the most common way a prerendered site ends up
@@ -157,6 +200,22 @@ const RULES = [
   },
 ]
 
+/**
+ * content/blog/draft-should-not-appear.md is a permanent fixture: a post with draft: true whose
+ * text must never reach the built site. Draft filtering has to hold in five separate places
+ * (listing query, tag pages, sitemap, both feeds, llms.txt) and a leak in any one of them is
+ * silent — the post simply appears where it should not.
+ */
+const DRAFT_MARKER = 'A draft that must not be published'
+const DRAFT_MUST_NOT_APPEAR_IN = [
+  'sitemap.xml',
+  'rss.xml',
+  'feed.json',
+  'llms.txt',
+  'blog/index.html',
+  'blog/tag/meta/index.html',
+]
+
 let failures = 0
 
 function fail(message) {
@@ -178,10 +237,24 @@ for (const { route, file, contains } of EXPECTATIONS) {
     else fail(`${route}: missing ${label} (${pattern})`)
   }
 
+  if (!file.endsWith('.html')) continue
+
   for (const rule of RULES) {
     if (rule.test(html)) console.log(`  ✓ ${rule.name}`)
     else fail(`${route}: ${rule.name}`)
   }
+}
+
+console.log('draft exclusion')
+for (const relative of DRAFT_MUST_NOT_APPEAR_IN) {
+  const file = `${DIST}/${relative}`
+  if (!existsSync(file)) {
+    fail(`draft check: ${file} was not generated`)
+    continue
+  }
+  const contents = await readFile(file, 'utf8')
+  if (contents.includes(DRAFT_MARKER)) fail(`draft leaked into ${relative}`)
+  else console.log(`  ✓ absent from ${relative}`)
 }
 
 if (failures) {
