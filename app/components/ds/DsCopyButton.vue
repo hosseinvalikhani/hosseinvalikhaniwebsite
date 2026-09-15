@@ -2,57 +2,32 @@
 /**
  * Copies text to the clipboard and confirms it.
  *
- * The confirmation is both visible and announced — a purely visual tick tells a screen-reader
- * user nothing, and `navigator.clipboard` gives no feedback of its own.
+ * The behaviour is in public/enhance.js; what stays here is the markup contract it depends on.
+ * Both icons are rendered and swapped in CSS on `data-ds-copy-state`, for the same reason the
+ * theme toggle renders all three of its own: the server cannot know the state, and an icon that
+ * appears only after script runs is a layout shift waiting to happen.
  *
- * Clipboard access is unavailable on insecure origins and can be denied outright, so failure is
- * handled rather than assumed away: the button reports that copying failed instead of showing a
- * tick for something that never happened.
+ * The confirmation is both visible and announced — a purely visual tick tells a screen-reader
+ * user nothing, and `navigator.clipboard` gives no feedback of its own. Failure is reported
+ * rather than assumed away: clipboard access is unavailable on insecure origins and can be
+ * denied outright, and showing a tick for something that never happened is worse than silence.
  */
 const { value, label = 'Copy' } = defineProps<{
   value: string
   label?: string
 }>()
-
-type State = 'idle' | 'copied' | 'failed'
-const state = ref<State>('idle')
-let timer: ReturnType<typeof setTimeout> | undefined
-
-async function copy() {
-  try {
-    await navigator.clipboard.writeText(value)
-    state.value = 'copied'
-  }
-  catch {
-    state.value = 'failed'
-  }
-
-  clearTimeout(timer)
-  timer = setTimeout(() => { state.value = 'idle' }, 2000)
-}
-
-onBeforeUnmount(() => clearTimeout(timer))
-
-const announcement = computed(() => {
-  if (state.value === 'copied') return 'Copied to clipboard'
-  if (state.value === 'failed') return 'Could not copy to clipboard'
-  return ''
-})
 </script>
 
 <template>
-  <div class="inline-flex items-center gap-2">
-    <button
-      type="button"
-      class="inline-flex min-h-11 items-center gap-2 rounded-control px-3 text-sm font-medium text-fg-muted transition-colors duration-fast hover:bg-raised hover:text-fg"
-      @click="copy"
-    >
-      <DsIcon :name="state === 'copied' ? 'check' : 'copy'" :size="18" />
-      <span>{{ state === 'copied' ? 'Copied' : state === 'failed' ? 'Failed' : label }}</span>
-    </button>
-
-    <DsVisuallyHidden role="status" aria-live="polite">
-      {{ announcement }}
-    </DsVisuallyHidden>
-  </div>
+  <button
+    type="button"
+    :data-ds-copy="value"
+    :data-ds-copy-idle-label="label"
+    data-ds-copy-state="idle"
+    class="ds-copy-button inline-flex min-h-11 items-center gap-2 rounded-control px-3 text-sm font-medium text-fg-muted transition-colors duration-fast hover:bg-raised hover:text-fg"
+  >
+    <DsIcon name="copy" :size="18" data-ds-copy-icon="idle" />
+    <DsIcon name="check" :size="18" data-ds-copy-icon="copied" />
+    <span data-ds-copy-label>{{ label }}</span>
+  </button>
 </template>

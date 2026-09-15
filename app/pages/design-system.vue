@@ -17,15 +17,16 @@ useHead({ title: 'Design system' })
 
 const { profile } = useAppConfig()
 const iconNames = Object.keys(icons) as IconName[]
-const dialogOpen = ref(false)
 
-const colorMode = useColorMode()
+/**
+ * The style guide has no client state of its own any more.
+ *
+ * Phase 13 removed the Vue client bundle, so the theme switcher, the dialog and the live token
+ * readout below are all markup that public/enhance.js drives — the same code path the rest of
+ * the site uses, which is the point: a style guide demonstrating behaviour the real site does
+ * not have is a style guide that lies.
+ */
 const modes = ['system', 'light', 'dark'] as const
-type Mode = (typeof modes)[number]
-
-function setTheme(mode: Mode) {
-  colorMode.preference = mode
-}
 
 /* ---------------------------------------------------------------- *
  * Tier 1 — the ramps, transcribed from the brand source.
@@ -123,24 +124,6 @@ const roleGroups: { group: string, roles: Role[] }[] = [
   },
 ]
 
-const resolved = ref<Record<string, string>>({})
-
-function readTokens() {
-  if (!import.meta.client) return
-  const style = getComputedStyle(document.documentElement)
-  const next: Record<string, string> = {}
-  for (const { roles } of roleGroups) {
-    for (const { token } of roles) next[token] = style.getPropertyValue(`--ds-${token}`).trim()
-  }
-  resolved.value = next
-}
-
-onMounted(() => {
-  readTokens()
-  // The class flip happens after the preference change, so read on the next frame.
-  watch(() => colorMode.value, () => requestAnimationFrame(readTokens))
-})
-
 /* ---------------------------------------------------------------- *
  * Measured contrast, straight from the brand source. This table is why
  * `accent` and `accent-text` are two separate tokens.
@@ -211,17 +194,13 @@ const proportion = [
               v-for="mode in modes"
               :key="mode"
               type="button"
-              class="rounded-chip px-3 py-1.5 text-sm font-medium transition-colors duration-fast"
-              :class="colorMode.preference === mode
-                ? 'bg-accent text-on-accent'
-                : 'text-fg-muted hover:bg-raised hover:text-fg'"
-              :aria-pressed="colorMode.preference === mode"
-              @click="setTheme(mode)"
+              :data-ds-theme-set="mode"
+              aria-pressed="false"
+              class="rounded-chip px-3 py-1.5 text-sm font-medium text-fg-muted transition-colors duration-fast hover:bg-raised hover:text-fg aria-pressed:bg-accent aria-pressed:text-on-accent aria-pressed:hover:bg-accent aria-pressed:hover:text-on-accent"
             >
               {{ mode }}
             </button>
           </div>
-          <span class="font-mono text-sm text-fg-subtle">resolved: {{ colorMode.value }}</span>
         </div>
       </header>
 
@@ -249,24 +228,34 @@ const proportion = [
               </p>
             </div>
 
-            <div class="mt-3 overflow-hidden rounded-panel border border-hairline">
-              <div class="flex">
-                <div
-                  v-for="s in r.steps"
-                  :key="s.step"
-                  class="flex h-24 flex-1 items-end justify-center pb-2 font-mono text-xs font-bold"
-                  :style="{ background: s.hex, color: readableOn(s.hex) }"
-                >
-                  {{ s.step }}
+            <!--
+              The swatches shrink to anything, but the hex labels underneath cannot: eleven
+              six-character strings have a floor of about 26rem, and below that they pushed the
+              whole page sideways. Both rows scroll together inside one container so they stay
+              aligned, rather than the labels drifting out of step with the colours they name.
+            -->
+            <div class="mt-3 overflow-x-auto">
+              <div class="min-w-[26rem]">
+                <div class="overflow-hidden rounded-panel border border-hairline">
+                  <div class="flex">
+                    <div
+                      v-for="s in r.steps"
+                      :key="s.step"
+                      class="flex h-24 flex-1 items-end justify-center pb-2 font-mono text-xs font-bold"
+                      :style="{ background: s.hex, color: readableOn(s.hex) }"
+                    >
+                      {{ s.step }}
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2 flex">
+                  <span
+                    v-for="s in r.steps"
+                    :key="s.step"
+                    class="flex-1 text-center font-mono text-[0.65rem] text-fg-subtle"
+                  >{{ s.hex.replace('#', '') }}</span>
                 </div>
               </div>
-            </div>
-            <div class="mt-2 flex">
-              <span
-                v-for="s in r.steps"
-                :key="s.step"
-                class="flex-1 text-center font-mono text-[0.65rem] text-fg-subtle"
-              >{{ s.hex.replace('#', '') }}</span>
             </div>
           </div>
         </div>
@@ -305,8 +294,8 @@ const proportion = [
                   <p class="font-mono text-sm font-bold">
                     {{ role.token }}
                   </p>
-                  <p class="mt-1 font-mono text-xs text-fg-subtle uppercase">
-                    {{ resolved[role.token] || '—' }}
+                  <p :data-ds-token="role.token" class="mt-1 font-mono text-xs text-fg-subtle uppercase">
+                    —
                   </p>
                   <p class="mt-2 text-sm text-fg-muted">
                     {{ role.role }}
@@ -754,22 +743,22 @@ const proportion = [
         </ul>
 
         <div class="mt-8">
-          <DsButton variant="secondary" @click="dialogOpen = true">
+          <DsButton variant="secondary" data-ds-dialog-open="demo-dialog">
             Open dialog
           </DsButton>
         </div>
 
-        <DsDialog v-model:open="dialogOpen" title="A native dialog">
+        <DsDialog id="demo-dialog" title="A native dialog">
           <p class="text-fg-muted">
             Everything that makes this accessible is behaviour the platform already has. The
             component is about forty lines, and most of them are comments explaining why there
             is nothing else here.
           </p>
           <div class="mt-6 flex flex-wrap gap-3">
-            <DsButton size="sm" @click="dialogOpen = false">
+            <DsButton size="sm" data-ds-dialog-close>
               Confirm
             </DsButton>
-            <DsButton size="sm" variant="ghost" @click="dialogOpen = false">
+            <DsButton size="sm" variant="ghost" data-ds-dialog-close>
               Cancel
             </DsButton>
             <DsLink to="https://nuxt.com">

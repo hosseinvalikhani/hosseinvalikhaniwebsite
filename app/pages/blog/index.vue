@@ -28,7 +28,7 @@ useSeoMeta({
   twitterCard: 'summary_large_image',
 })
 
-defineOgImageComponent('Default', {
+defineOgImage('Default', {
   title: 'Writing',
   name: useAppConfig().profile.name,
   label: 'Blog',

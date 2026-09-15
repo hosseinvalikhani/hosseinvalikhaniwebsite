@@ -6,7 +6,9 @@
  * into a real landmark a screen reader can list and jump between. Without it the element is
  * announced as an unnamed region, which is worse than not using <section> at all.
  *
- * scroll-margin-top keeps the heading clear of the sticky header when arrived at by hash link.
+ * Nothing here offsets the hash landing: base.css sets scroll-padding-top once on the scrolling
+ * box, which covers this section and every other scroll-into-view. A scroll-margin here as well
+ * would stack with it rather than reinforce it.
  */
 const { id, heading, eyebrow, level = 2 } = defineProps<{
   id: string
@@ -24,7 +26,7 @@ const headingTag = computed(() => `h${level}`)
   <section
     :id="id"
     :aria-labelledby="headingId"
-    class="scroll-mt-[calc(var(--header-h)+1.5rem)] border-t border-hairline py-16 sm:py-24"
+    class="border-t border-hairline py-16 sm:py-24"
   >
     <DsContainer>
       <DsEyebrow v-if="eyebrow" decorative>

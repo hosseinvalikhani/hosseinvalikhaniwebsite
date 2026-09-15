@@ -15,7 +15,7 @@ useSeoMeta({
   twitterCard: 'summary_large_image',
 })
 
-defineOgImageComponent('Default', {
+defineOgImage('Default', {
   title: profile.name,
   name: profile.title,
   label: 'Personal site',

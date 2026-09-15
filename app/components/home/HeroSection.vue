@@ -27,16 +27,25 @@ const { profile } = useAppConfig()
           </DsEyebrow>
 
           <!--
-            Deliberately *not* revealed. This is the likely LCP element, and Largest Contentful
-            Paint is recorded when an element is first painted at a visible opacity — fading it
-            in would push LCP out by the whole animation duration. The same reasoning excludes
-            the avatar, the other LCP candidate.
+            Deliberately *not* revealed. Largest Contentful Paint is recorded when an element is
+            first painted at a visible opacity, so fading one in pushes LCP out by its delay plus
+            its whole duration. That excludes the avatar too, the other obvious candidate.
           -->
           <h1 id="hero-heading" class="mt-6 text-display text-balance">
             {{ profile.name }}
           </h1>
 
-          <p class="ds-reveal mt-6 max-w-prose text-xl text-fg-muted text-pretty" style="--ds-reveal-delay: 60ms">
+          <!--
+            And this one — which was not obvious, and cost 0.5s until Phase 13 measured it.
+            LCP picks the largest painted block, and at phone width this paragraph wraps to four
+            lines and beats the display heading on area. It was revealed with a 60ms delay and a
+            420ms fade, and Lighthouse attributed 1.5s of "render delay" to exactly that.
+
+            The rule is not "do not animate the h1", it is "do not animate whatever turns out to
+            be largest" — and that is a measurement, not a guess. The reveal still plays on the
+            actions and the location line below, neither of which can ever be the LCP element.
+          -->
+          <p class="mt-6 max-w-prose text-xl text-fg-muted text-pretty">
             {{ profile.intro }}
           </p>
 

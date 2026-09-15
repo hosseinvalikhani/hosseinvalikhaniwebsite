@@ -11,56 +11,32 @@
  *   - focus returned to whatever opened it, without us storing a reference
  *   - the top layer, so no z-index stacking to manage
  *
- * That is why the plan has no reka-ui and no focus-trap dependency.
+ * That is why the plan has no reka-ui and no focus-trap dependency — and why dropping the Vue
+ * client bundle in Phase 13 cost this component almost nothing. The only things the platform
+ * does not supply are the open trigger and light-dismiss, and both live in public/enhance.js.
+ *
+ * The dialog is addressed by `id`: anything with `data-ds-dialog-open="<id>"` opens it. That is
+ * the same contract `<button popovertarget>` uses, and it means a trigger does not have to be
+ * anywhere near the dialog in the markup.
  */
-const open = defineModel<boolean>('open', { default: false })
-
-const { title, describedBy } = defineProps<{
+const { id, title, describedBy } = defineProps<{
+  /** Opened by any element carrying `data-ds-dialog-open` with this value. */
+  id: string
   /** Accessible name for the dialog. Rendered visibly unless `hideTitle` is set. */
   title: string
   hideTitle?: boolean
   describedBy?: string
 }>()
 
-const dialog = useTemplateRef<HTMLDialogElement>('dialog')
-const titleId = useId()
-
-function sync(isOpen: boolean) {
-  const el = dialog.value
-  if (!el) return
-  // Guard both ways: calling showModal() on an already-open dialog throws.
-  if (isOpen && !el.open) el.showModal()
-  else if (!isOpen && el.open) el.close()
-}
-
-watch(open, sync)
-
-// A lazily-mounted dialog is created with `open` already true, so the watcher above never
-// fires for the first open. Without this the element exists but is never shown.
-onMounted(() => sync(open.value))
-
-/** Escape and form-method=dialog both fire `close`, so sync the model from the element. */
-function onClose() {
-  open.value = false
-}
-
-/**
- * Light-dismiss. A click on the backdrop reports the <dialog> itself as the target, because the
- * backdrop is its pseudo-element — anything inside the content wrapper targets that instead.
- */
-function onClick(event: MouseEvent) {
-  if (event.target === dialog.value) open.value = false
-}
+const titleId = computed(() => `${id}-title`)
 </script>
 
 <template>
   <dialog
-    ref="dialog"
+    :id="id"
     class="ds-dialog"
     :aria-labelledby="titleId"
     :aria-describedby="describedBy"
-    @close="onClose"
-    @click="onClick"
   >
     <div class="ds-dialog__panel">
       <div class="flex items-start justify-between gap-4">
@@ -73,7 +49,7 @@ function onClick(event: MouseEvent) {
           label="Close dialog"
           variant="ghost"
           size="sm"
-          @click="open = false"
+          data-ds-dialog-close
         />
       </div>
 

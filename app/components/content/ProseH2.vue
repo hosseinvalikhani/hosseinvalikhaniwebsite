@@ -11,7 +11,7 @@ const { id } = defineProps<{ id?: string }>()
 </script>
 
 <template>
-  <h2 :id="id" class="group mt-14 scroll-mt-[calc(var(--header-h)+1.5rem)] text-2xl font-bold text-balance first:mt-0">
+  <h2 :id="id" class="group mt-14 text-2xl font-bold text-balance first:mt-0">
     <a v-if="id" :href="`#${id}`" class="no-underline">
       <slot />
       <span

@@ -37,7 +37,7 @@ export function usePostSeo(post: PostLike) {
     articleTag: post.tags,
   })
 
-  defineOgImageComponent('Default', {
+  defineOgImage('Default', {
     title,
     name: profile.name,
     label: post.tags?.[0] ?? 'Writing',

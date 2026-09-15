@@ -45,10 +45,18 @@
     color: var(--ds-on-accent);
   }
 
-  /* Anything with an id is a potential hash target, so keep it clear of the header too. */
-  :target {
-    scroll-margin-top: calc(var(--header-h) + 1.5rem);
-  }
+  /*
+    No scroll-margin here, deliberately.
+
+    `scroll-padding-top` above already insets every scroll-into-view in this container — hash
+    jumps, keyboard focus, scrollIntoView() alike. Adding scroll-margin to the target as well
+    does not reinforce it, it *adds* to it: the two offsets stack, and a section landed 176px
+    down instead of 88. That was visible as a band of empty space above every hash target, and
+    it broke the nav indicator, which reasonably assumed a target lands where scroll-padding
+    says it does.
+
+    One offset, declared once, on the scrolling box.
+  */
 
   /* Media never overflows its container or arrives without reserved space. */
   img,
@@ -203,6 +211,28 @@
   }
 
   /*
+    State-driven icon swapping.
+
+    Both the theme toggle and the copy button render every icon they might need and let an
+    attribute choose. With no client framework there is nothing to re-render, but that is not
+    the only reason: an icon that only appears once script has run is a layout shift, and these
+    sit in the header and in every code block.
+  */
+  .ds-theme-toggle [data-ds-theme-icon],
+  .ds-copy-button [data-ds-copy-icon] {
+    display: none;
+  }
+
+  .ds-theme-toggle[data-ds-theme-pref="system"] [data-ds-theme-icon="system"],
+  .ds-theme-toggle[data-ds-theme-pref="light"] [data-ds-theme-icon="light"],
+  .ds-theme-toggle[data-ds-theme-pref="dark"] [data-ds-theme-icon="dark"],
+  .ds-copy-button[data-ds-copy-state="idle"] [data-ds-copy-icon="idle"],
+  .ds-copy-button[data-ds-copy-state="failed"] [data-ds-copy-icon="idle"],
+  .ds-copy-button[data-ds-copy-state="copied"] [data-ds-copy-icon="copied"] {
+    display: block;
+  }
+
+  /*
     The one page-load reveal.
 
     Opacity only — never translate. A heading that slides into place is both a layout-shift
@@ -318,6 +348,20 @@
   .ds-glow {
     position: relative;
     isolation: isolate;
+    /*
+      The glow bleeds 10% past each side (see the insets below), which on a full-width section
+      means 10% of the viewport hanging off the right edge — enough to give the whole page a
+      horizontal scrollbar at every width.
+
+      `clip`, not `hidden`, and on one axis only. `overflow-x: hidden` would force the other axis
+      to `auto` and turn this into a scroll container, which breaks `position: sticky` for any
+      descendant and adds a scroll box nobody asked for; `clip` does neither and leaves
+      `overflow-y: visible` genuinely visible, so the vertical bleed the glow relies on survives.
+
+      On the full-width sections this is invisible: the box edge *is* the viewport edge, so the
+      only thing being clipped was already off screen.
+    */
+    overflow-x: clip;
   }
 
   .ds-glow::before {

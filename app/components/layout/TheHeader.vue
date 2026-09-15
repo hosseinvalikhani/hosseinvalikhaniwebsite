@@ -2,75 +2,34 @@
 /**
  * The sticky site header.
  *
- * It measures itself and publishes the result to `--header-h`, which base.css uses for
- * scroll-padding. Hardcoding that value works right up until the nav wraps to two lines on a
- * narrow screen, at which point every hash link lands with its heading hidden behind the
- * header — the WCAG 2.2 Focus Not Obscured failure the token exists to prevent.
+ * Two things that used to be this component's script now live in public/enhance.js, because
+ * Phase 13 removed the Vue client bundle: measuring the header into `--header-h` (which
+ * base.css derives scroll-padding from, and which WCAG 2.4.11 depends on), and marking which
+ * section is in view.
  *
- * No backdrop-filter: it is a per-frame composite on a element that is on screen during every
+ * What is left here is the markup contract those two rely on:
+ *
+ * - `data-ds-header` is what gets measured.
+ * - `data-ds-section-link` names the id each nav item points at, so the observer can pair them
+ *   up without parsing hrefs.
+ * - `aria-current-value="false"` makes Vue Router render `aria-current="false"` rather than
+ *   `"page"`. Router ignores the hash when matching, so on `/` every one of these counts as
+ *   exact-active and all five would otherwise claim to be the current page. Rendering "false"
+ *   also gives the script an attribute to update rather than one to invent, and base.css only
+ *   draws the indicator for a value that is not "false".
+ *
+ * No backdrop-filter: it is a per-frame composite on an element that is on screen during every
  * scroll, and an opaque background reads better against the glow anyway.
  */
 const { nav, profile } = useAppConfig()
-const route = useRoute()
 
-const header = useTemplateRef<HTMLElement>('header')
-const drawerOpen = ref(false)
-
-/**
- * The drawer only exists below `md`, but a statically imported one ships its JavaScript to
- * every visitor on every page. `Lazy` plus this flag defers the chunk until the menu is first
- * opened — and keeps it mounted afterwards, so the close animation still has something to run
- * on. (`v-if="drawerOpen"` alone would unmount it mid-exit.)
- */
-const drawerMounted = ref(false)
-watch(drawerOpen, (isOpen) => { if (isOpen) drawerMounted.value = true })
-
-/** Hash targets on the home page, in document order. */
-const sectionIds = nav
-  .filter(item => item.to.includes('#'))
-  .map(item => item.to.split('#')[1]!)
-
-const isHome = computed(() => route.path === '/')
-const activeSection = useActiveSection(sectionIds)
-
-/**
- * Vue Router treats every `/#section` link as exact-active while you are on `/`, because it
- * ignores the hash when matching — so all five nav items were rendering aria-current="page"
- * at once, each claiming to be the current location.
- *
- * Rather than fight that, we supply the *value* the router should stamp: "true" for the
- * section actually in view and "false" for the rest. Both are valid ARIA, and off the home
- * page these links are not exact-active so no attribute is rendered at all.
- *
- * Route links (Blog) keep the default "page", which is correct for a real navigation target.
- */
-function currentValue(to: string) {
-  if (!to.includes('#')) return 'page'
-  if (!isHome.value) return 'page'
-  return to.split('#')[1] === activeSection.value ? 'true' : 'false'
-}
-
-onMounted(() => {
-  const el = header.value
-  if (!el) return
-
-  const publish = () => {
-    document.documentElement.style.setProperty('--header-h', `${el.offsetHeight}px`)
-  }
-
-  publish()
-  const observer = new ResizeObserver(publish)
-  observer.observe(el)
-  onBeforeUnmount(() => observer.disconnect())
-})
-
-// Navigating within the page should not leave the drawer sitting open behind the content.
-watch(() => route.fullPath, () => { drawerOpen.value = false })
+/** The hash target each nav item owns, or undefined for a real route. */
+const sectionId = (to: string) => (to.includes('#') ? to.split('#')[1] : undefined)
 </script>
 
 <template>
   <header
-    ref="header"
+    data-ds-header
     class="sticky top-0 z-40 border-b border-hairline bg-canvas"
   >
     <DsContainer>
@@ -89,7 +48,8 @@ watch(() => route.fullPath, () => { drawerOpen.value = false })
               <li v-for="item in nav" :key="item.to">
                 <NuxtLink
                   :to="item.to"
-                  :aria-current-value="currentValue(item.to)"
+                  :data-ds-section-link="sectionId(item.to)"
+                  :aria-current-value="sectionId(item.to) ? 'false' : 'page'"
                   class="ds-nav-link rounded-chip px-3 py-2 text-sm transition-colors duration-fast"
                 >
                   {{ item.label }}
@@ -106,12 +66,12 @@ watch(() => route.fullPath, () => { drawerOpen.value = false })
             label="Open navigation menu"
             variant="ghost"
             class="md:hidden"
-            @click="drawerOpen = true"
+            data-ds-dialog-open="nav-drawer"
           />
         </div>
       </div>
     </DsContainer>
 
-    <LazyTheNavDrawer v-if="drawerMounted" v-model:open="drawerOpen" />
+    <TheNavDrawer />
   </header>
 </template>

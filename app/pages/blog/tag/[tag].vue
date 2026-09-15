@@ -58,7 +58,7 @@ useSeoMeta({
   twitterCard: 'summary_large_image',
 })
 
-defineOgImageComponent('Default', {
+defineOgImage('Default', {
   title: label.value,
   name: useAppConfig().profile.name,
   label: 'Tagged',

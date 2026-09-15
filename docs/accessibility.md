@@ -40,9 +40,32 @@ These need no code, but they need a reason on the record.
   see the note in `ContactSection.vue` for why.
 - **3.3.8 Accessible Authentication** — there is no authentication.
 - **2.4.11 Focus Not Obscured (Minimum)** — the sticky header is the only thing that can cover a
-  focused element. `TheHeader` measures itself into `--header-h` with a `ResizeObserver`, and
-  `scroll-padding-top` / `scroll-margin-top` are derived from it, so the clearance stays correct
-  when the header wraps at narrow widths rather than being right only at the width it was written.
+  focused element. It is measured into `--header-h` with a `ResizeObserver` (in `enhance.js` since
+  Phase 13; in `TheHeader` before that), and `scroll-padding-top` / `scroll-margin-top` derive from
+  it, so the clearance stays correct when the header wraps at a narrow width rather than being
+  right only at the width it was written. The CSS carries a `4rem` default, so the clearance is
+  approximately right even before the measurement lands.
+
+## What Phase 13 changed
+
+Dropping the Vue client bundle (`features.noScripts`) rebuilt every interactive control as markup
+plus a delegated listener in `public/enhance.js`. The accessibility contract did not change, but
+where it is kept did, so it is worth being explicit:
+
+- **The controls still need JavaScript**, exactly as they did when Vue supplied it. Nothing became
+  less available: the theme toggle, the mobile drawer and the copy button were all script-driven
+  before. Reading and navigation have never needed it, and still do not.
+- **The dialog is unchanged.** `showModal()` was always what supplied the focus trap, the inert
+  background, Escape, focus restoration and the top layer. Only the open trigger moved.
+- **One shared live region** replaces the per-component ones. It is created empty at load and has
+  its text replaced, because a region has to already be in the accessibility tree before content
+  lands in it or the change is not announced. Repeated messages are cleared first, so copying
+  twice announces twice rather than reading as no change.
+- **Icons are chosen in CSS, not by a render.** The theme toggle renders all three of its icons
+  and the copy button both of its own, and an attribute picks. That keeps the accessible name and
+  the visible state in step without a hydration pass, and removes a class of layout shift.
+- **The colour-mode no-flash script survives**, because it is inline. The theme is still resolved
+  and applied before first paint, so there is no flash and no shift — with or without enhance.js.
 
 ## Still manual, every release
 
