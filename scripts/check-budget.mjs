@@ -23,6 +23,7 @@
  */
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { join } from 'node:path'
+import { gzipSync } from 'node:zlib'
 import process from 'node:process'
 
 const DIST = '.output/public'
@@ -56,6 +57,7 @@ const LINK = /<link\b[^>]*\bhref="(\/[^"]+)"[^>]*>/g
 const SCRIPT_SRC = /<script\b[^>]*\bsrc="(\/[^"]+)"/g
 const SCRIPT_BLOCK = /<script\b([^>]*)>([\s\S]*?)<\/script>/g
 const NOT_CODE = /type="application\/ld\+json"|type="speculationrules"/
+const STYLE_BLOCK = /<style[^>]*>([\s\S]*?)<\/style>/g
 
 async function measure(file) {
   const html = await readFile(file, 'utf8')
@@ -78,8 +80,18 @@ async function measure(file) {
 
   let jsBytes = inlineBytes
   for (const path of js) jsBytes += await transferSize(path)
+
+  /*
+    CSS is inlined into every page (see the prerender hook in nuxt.config), so counting only
+    <link rel="stylesheet"> would report 0 KB and call it a pass. Bytes do not stop counting
+    because they moved: the inline block is compressed with the HTML around it, so it is measured
+    the same way — by compressing it and taking the result.
+  */
   let cssBytes = 0
   for (const path of css) cssBytes += await transferSize(path)
+  for (const match of html.matchAll(STYLE_BLOCK)) {
+    cssBytes += gzipSync(Buffer.from(match[1])).length
+  }
 
   return {
     route: file.slice(DIST.length).split('\\').join('/'),

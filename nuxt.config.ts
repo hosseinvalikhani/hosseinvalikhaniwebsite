@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
+import { withReadingTime } from './lib/reading-time'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -138,6 +139,26 @@ export default defineNuxtConfig({
         return map
       }
 
+      /**
+       * Make every url() in a stylesheet absolute before inlining it.
+       *
+       * @nuxt/fonts writes `url(../_fonts/x.woff2)`, which is relative to the stylesheet at
+       * `/_nuxt/entry.css` and therefore resolves to `/_fonts/x.woff2`. Inlined into a page, the
+       * same text resolves against the *page* instead: correct at `/`, and 404 on `/blog/tag/css`,
+       * where it becomes `/blog/_fonts/x.woff2`.
+       *
+       * That failure is close to invisible. The page still renders — in the fallback font — and
+       * nothing errors except two console 404s. It was caught by Lighthouse's best-practices
+       * score dropping to 96 on a nested route, which is the only reason this is not shipped.
+       */
+      function absolutise(css: string, stylesheetHref: string) {
+        const base = new URL(stylesheetHref, 'http://localhost')
+        return css.replace(/url\(\s*(['"]?)([^'")]+)['"]?\s*\)/g, (whole, quote, ref) => {
+          if (/^(data:|https?:|\/\/|#|\/)/.test(ref)) return whole
+          return `url(${quote}${new URL(ref, base).pathname}${quote})`
+        })
+      }
+
       nitro.hooks.hook('prerender:generate', async (route) => {
         if (!route.fileName?.endsWith('.html') || typeof route.contents !== 'string') return
 
@@ -150,27 +171,44 @@ export default defineNuxtConfig({
           .join('')
 
         if (tags) route.contents = route.contents.replace('</head>', `${tags}</head>`)
+
+        /*
+          Inline the stylesheet rather than linking it.
+
+          The whole site's CSS is 6.8 KB brotli — one render-blocking request whose only job is
+          to unblock paint. Removing that round trip is worth 74ms of LCP on the home page and
+          151ms on a post, measured as the median of three runs: it took the two worst routes
+          from 1504ms, four milliseconds over the budget, to 1430 and 1353 with real headroom.
+
+          The cost is that CSS is no longer a separately cached file shared between pages. At
+          this size, on a thirteen-page site that prerenders the next navigation through
+          speculation rules, that trade is clearly worth it — and LCP is measured on the visit
+          where nothing is cached anyway.
+
+          scripts/check-budget.mjs counts inline <style> as CSS for exactly this reason, so the
+          bytes do not disappear from the budget by moving.
+        */
+        const cssHref = route.contents.match(/<link rel="stylesheet"[^>]*href="(\/_nuxt\/[^"]+\.css)"[^>]*>/)
+        if (cssHref) {
+          for (const asset of nitro.options.publicAssets) {
+            const file = join(asset.dir, cssHref[1].replace((asset.baseURL ?? '/').replace(/\/$/, ''), ''))
+            if (!existsSync(file)) continue
+            const css = await readFile(file, 'utf8')
+            route.contents = route.contents.replace(cssHref[0], `<style>${absolutise(css, cssHref[1])}</style>`)
+            break
+          }
+        }
       })
     },
 
-    /**
-     * Reading time. Nuxt Content has no built-in support, and a client-side word count would
-     * mean shipping the post body to the listing page just to count it.
-     *
-     * The line ending has to be tolerated rather than assumed: authoring happens on Windows,
-     * so a `\r\n` after the opening `---` is normal and a `/^---\n/` pattern would silently
-     * match nothing, leaving readingTime undefined on every post with no error anywhere.
-     */
+    /** Reading time. The logic lives in lib/reading-time.ts so it can be unit tested. */
     'content:file:beforeParse'(ctx) {
       // Content v3 passes a context object, not the file itself — v2 passed the file, and the
       // difference shows up as "cannot read properties of undefined" rather than a type error.
       const file = ctx.file
       if (!file?.id?.endsWith('.md') || typeof file.body !== 'string') return
 
-      const words = file.body.split(/\s+/).filter(Boolean).length
-      const minutes = Math.max(1, Math.ceil(words / 200))
-
-      file.body = file.body.replace(/^---\r?\n/, match => `${match}readingTime: ${minutes}\n`)
+      file.body = withReadingTime(file.body)
     },
   },
 
