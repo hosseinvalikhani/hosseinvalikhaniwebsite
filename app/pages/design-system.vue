@@ -105,6 +105,7 @@ const roleGroups: { group: string, roles: Role[] }[] = [
     group: 'Accent',
     roles: [
       { token: 'accent', role: 'Fills. Same hue in both themes. ~8%, one element per screen.' },
+      { token: 'accent-edge', role: 'The boundary of that fill. Equals it on dark; Pine on light.' },
       { token: 'accent-text', role: 'Green as type — steps to 700 in light mode.' },
       { token: 'accent-hover', role: 'The fill under the pointer.' },
       { token: 'on-accent', role: 'Text sitting on an accent fill. Ink, not white.' },
@@ -200,8 +201,12 @@ const proportion = [
         </p>
 
         <div class="mt-8 flex flex-wrap items-center gap-3">
-          <span class="font-mono text-sm text-fg-subtle">theme</span>
-          <div class="flex gap-1 rounded-control border border-hairline p-1">
+          <span id="theme-switcher-label" class="font-mono text-sm text-fg-subtle">theme</span>
+          <div
+            role="group"
+            aria-labelledby="theme-switcher-label"
+            class="flex gap-1 rounded-control border border-hairline p-1"
+          >
             <button
               v-for="mode in modes"
               :key="mode"
@@ -325,6 +330,16 @@ const proportion = [
           Both brand colours are bright: excellent on ink, failing on white. That is the whole
           reason <code class="font-mono text-accent-text">accent</code> and
           <code class="font-mono text-accent-text">accent-text</code> are two different tokens.
+        </p>
+
+        <p class="mt-3 max-w-prose text-fg-muted">
+          The table below is the brand source's own measurement of the palette. The
+          <em>tokens</em> built on it are measured separately and on every run:
+          <code class="font-mono text-accent-text">npm run check:contrast</code> re-reads
+          tokens.css and asserts every text pair at 4.5:1 and every component boundary at 3:1,
+          in both themes. The Phase 12 audit found three failures that way — a third text tier
+          at 3.46:1, a control border at 1.4:1, and the primary button's own edge at 1.7:1 on
+          light — none of which are visible in this table.
         </p>
 
         <div class="mt-8 overflow-x-auto">

@@ -8,12 +8,17 @@
  *
  * Green appears exactly once here — the primary button. If a second green element ever lands
  * in this section, the 8% proportion rule has been broken and the page loses its focal point.
+ *
+ * The <section> is named from its own h1. An unnamed <section> is not a region at all — it is
+ * announced as a generic container and never appears in the landmark list a screen-reader user
+ * navigates by, which is the one thing using the element was supposed to buy. The same applies
+ * to the blog listing, the tag pages and the error page; DsSection does it for everything else.
  */
 const { profile } = useAppConfig()
 </script>
 
 <template>
-  <section class="ds-glow py-20 sm:py-28 lg:py-32">
+  <section aria-labelledby="hero-heading" class="ds-glow py-20 sm:py-28 lg:py-32">
     <DsContainer>
       <div class="flex flex-col-reverse gap-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
         <div class="max-w-2xl">
@@ -27,7 +32,7 @@ const { profile } = useAppConfig()
             in would push LCP out by the whole animation duration. The same reasoning excludes
             the avatar, the other LCP candidate.
           -->
-          <h1 class="mt-6 text-display text-balance">
+          <h1 id="hero-heading" class="mt-6 text-display text-balance">
             {{ profile.name }}
           </h1>
 

@@ -141,6 +141,7 @@
   --color-fg-subtle: var(--ds-fg-subtle);
 
   --color-accent: var(--ds-accent); /* fills only */
+  --color-accent-edge: var(--ds-accent-edge); /* the fill's own boundary — see below */
   --color-accent-text: var(--ds-accent-text); /* type and icons on the canvas */
   --color-accent-hover: var(--ds-accent-hover);
   --color-on-accent: var(--ds-on-accent);
@@ -157,6 +158,15 @@
   Dark is the default and the mode the brand was designed for, so it lives on bare :root.
   That also means a visitor with JavaScript disabled — no class is ever stamped — gets the
   designed-for theme rather than an accidental one.
+
+  The three text tiers were measured in the Phase 12 audit and two of them moved a ramp step.
+  `fg-subtle` carries dates, reading time, table headers and the copyright line — all of it
+  ordinary body text at 13–14px, so all of it needs 4.5:1, not the 3:1 a "de-emphasised" name
+  makes it tempting to assume. At slate-500 it measured 4.24:1 on canvas and 3.46:1 on raised:
+  a real 1.4.3 failure on every post and every card. It now holds Mist #94A3B8, which is the
+  colour Appendix A names for captions and metadata in the first place, and `fg-muted` moves up
+  to slate-300 so the two tiers stay visibly distinct. scripts/check-contrast.mjs re-measures
+  every pair in this file, so the next value that drifts fails a command rather than an audit.
 */
 :root,
 :root.dark {
@@ -165,15 +175,17 @@
   --ds-raised: #131f36;
 
   --ds-hairline: #1e293b;
-  --ds-hairline-strong: #334155;
+  --ds-hairline-strong: #64748b; /* 4.2:1 on canvas — it bounds real controls, so 1.4.11 applies */
 
   --ds-fg: #f8fafc;
-  --ds-fg-muted: #94a3b8;
-  --ds-fg-subtle: #64748b;
+  --ds-fg-muted: #cbd5e1; /* 11.1:1 on raised, the darkest surface it ever sits on */
+  --ds-fg-subtle: #94a3b8; /* Mist — the brand's caption/metadata colour. 6.4:1 on raised */
 
   --ds-accent: #00dc82;
   --ds-accent-text: #00dc82; /* 11.1:1 on ink */
   --ds-accent-hover: #00c16a;
+  /* The fill is already 11.1:1 against ink, so the edge is the fill and draws nothing. */
+  --ds-accent-edge: #00dc82;
   --ds-on-accent: #020420; /* ink on green — 11.1:1 */
 
   --ds-link: #38bdf8; /* 9.4:1 on ink */
@@ -198,15 +210,22 @@
   --ds-raised: #f1f5f9;
 
   --ds-hairline: #e2e8f0;
-  --ds-hairline-strong: #cbd5e1;
+  --ds-hairline-strong: #64748b; /* 4.6:1 on canvas — same role, same requirement, both themes */
 
   --ds-fg: #020420;
-  --ds-fg-muted: #475569;
-  --ds-fg-subtle: #64748b;
+  --ds-fg-muted: #334155; /* 9.5:1 on raised */
+  --ds-fg-subtle: #475569; /* 6.9:1 on raised */
 
   --ds-accent: #00dc82;
   --ds-accent-text: #007f45; /* 5.1:1 on white */
   --ds-accent-hover: #00a155;
+  /*
+    Green on paper is 1.74:1. On light, a primary button filled with it has no visible boundary
+    at all — you can read the label but not see where the control is, which is exactly what
+    1.4.11 is about. Pine (ramp 600, Appendix A's "primary deep") draws that edge at 3.2:1 and
+    disappears back into the fill on hover, where the fill itself has become Pine.
+  */
+  --ds-accent-edge: #00a155;
   --ds-on-accent: #020420;
 
   --ds-link: #0369a1; /* 5.9:1 on white */
@@ -227,16 +246,16 @@
 @media (prefers-contrast: more) {
   :root,
   :root.dark {
-    --ds-fg-muted: #cbd5e1;
-    --ds-fg-subtle: #94a3b8;
+    --ds-fg-muted: #e2e8f0;
+    --ds-fg-subtle: #cbd5e1;
     --ds-hairline: #475569;
-    --ds-hairline-strong: #64748b;
+    --ds-hairline-strong: #94a3b8;
   }
 
   :root.light {
-    --ds-fg-muted: #334155;
-    --ds-fg-subtle: #475569;
+    --ds-fg-muted: #1e293b;
+    --ds-fg-subtle: #334155;
     --ds-hairline: #94a3b8;
-    --ds-hairline-strong: #64748b;
+    --ds-hairline-strong: #475569;
   }
 }

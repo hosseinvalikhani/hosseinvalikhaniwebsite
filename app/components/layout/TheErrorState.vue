@@ -11,11 +11,11 @@ const isNotFound = computed(() => statusCode === 404)
 </script>
 
 <template>
-  <section class="ds-glow py-24 sm:py-32">
+  <section aria-labelledby="error-heading" class="ds-glow py-24 sm:py-32">
     <DsContainer>
       <DsEyebrow>Error {{ statusCode }}</DsEyebrow>
 
-      <h1 class="mt-6 text-display text-balance">
+      <h1 id="error-heading" class="mt-6 text-display text-balance">
         {{ isNotFound ? 'This page does not exist.' : 'Something went wrong.' }}
       </h1>
 

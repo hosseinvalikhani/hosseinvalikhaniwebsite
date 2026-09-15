@@ -40,10 +40,10 @@ useSchemaOrg([
 </script>
 
 <template>
-  <section class="py-16 sm:py-24">
+  <section aria-labelledby="blog-heading" class="py-16 sm:py-24">
     <DsContainer>
       <DsEyebrow>Blog</DsEyebrow>
-      <h1 class="mt-4 text-3xl text-balance">
+      <h1 id="blog-heading" class="mt-4 text-3xl text-balance">
         Writing
       </h1>
       <p class="mt-6 max-w-prose text-lg text-fg-muted text-pretty">

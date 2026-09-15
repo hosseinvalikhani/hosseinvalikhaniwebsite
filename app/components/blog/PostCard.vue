@@ -6,6 +6,10 @@
  * accessible name is the title. The tags sit *outside* that link's stretched area in reading
  * order but above it in stacking order, so they stay readable without becoming part of the
  * link's name.
+ *
+ * The title is an h2, not an h3. Both places this card is used — the listing and a tag page —
+ * put it directly under that page's h1, and the level is what a screen reader's heading list
+ * is built from: an h3 there implies a missing h2 section that does not exist.
  */
 const { post } = defineProps<{
   post: {
@@ -22,11 +26,11 @@ const { post } = defineProps<{
 <template>
   <DsCard as="article" interactive class="h-full">
     <div class="flex h-full flex-col">
-      <h3 class="text-xl font-bold text-balance">
+      <h2 class="text-xl font-bold text-balance">
         <NuxtLink :to="post.path" class="ds-card-link">
           {{ post.title }}
         </NuxtLink>
-      </h3>
+      </h2>
 
       <p class="mt-3 flex-1 text-fg-muted text-pretty">
         {{ post.description }}

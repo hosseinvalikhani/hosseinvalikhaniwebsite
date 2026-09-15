@@ -44,10 +44,14 @@ const classes = variants(
   + 'disabled:pointer-events-none disabled:opacity-55',
   {
     variant: {
-      // Ink on green in both themes — 11.1:1, and the brand hue never shifts.
-      primary: 'bg-accent text-on-accent hover:bg-accent-hover rounded-control',
+      // Ink on green in both themes — 11.1:1, and the brand hue never shifts. The border is
+      // not decoration: on light, the green fill is 1.74:1 against the canvas, so without an
+      // edge the control has no visible boundary (1.4.11). In dark the token equals the fill
+      // and the border draws nothing.
+      primary: 'bg-accent text-on-accent border border-accent-edge hover:bg-accent-hover rounded-control',
       secondary: 'border border-hairline-strong text-fg hover:bg-raised rounded-control',
-      ghost: 'text-fg-muted hover:bg-raised hover:text-fg rounded-control',
+      // Transparent rather than absent, so all three variants are the same height in a row.
+      ghost: 'border border-transparent text-fg-muted hover:bg-raised hover:text-fg rounded-control',
       link: 'text-link hover:text-link-hover underline underline-offset-4 decoration-1 rounded-chip',
     },
     // Padding is deliberately NOT here — see PADDING below.
@@ -78,7 +82,14 @@ const rootClass = computed(() => {
   const extra: string[] = []
   // 44×44 is our own bar; WCAG 2.2 AA only asks for 24×24. The `link` variant is inline text,
   // where a 44px box would break the line it sits in.
-  if (props.variant !== 'link') extra.push('min-h-11 min-w-11')
+  //
+  // `ds-button` is the hook base.css uses to give this a border under forced colours, where
+  // every background collapses to Canvas. A <button> keeps a UA border there and survives, but
+  // these render as <a> just as often — and an anchor styled as a filled button flattens into
+  // bare text with no edge at all, which is how the hero's two actions stopped looking like
+  // actions. The `link` variant is excluded for the same reason it skips the 44px box: it is
+  // meant to read as a word in a sentence, and a border would box it mid-paragraph.
+  if (props.variant !== 'link') extra.push('ds-button min-h-11 min-w-11')
   if (props.block) extra.push('w-full')
   extra.push(props.iconOnly ? 'p-0 aspect-square' : PADDING[props.size])
 

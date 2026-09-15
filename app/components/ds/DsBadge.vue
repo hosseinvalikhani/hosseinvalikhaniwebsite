@@ -6,6 +6,11 @@ import { variants } from '~/design/variants'
  *
  * Deliberately a <span>, not a button or a link — when a tag needs to navigate, it is wrapped
  * in a DsLink so the interactive element is the thing that says it is interactive.
+ *
+ * The `sm` padding is set by WCAG 2.2 Target Size, not by taste. A linked chip is the target,
+ * and the link box is exactly the chip box, so `py-0.5` made it 22px tall — under the 24×24
+ * minimum. The spacing exception does not rescue it either: chips sit 8px apart, so the 24px
+ * circles the exception measures would overlap. `py-1` puts it at 26px and the question closes.
  */
 const { variant = 'neutral', size = 'md' } = defineProps<{
   variant?: 'neutral' | 'accent' | 'echo'
@@ -22,7 +27,7 @@ const classes = variants(
       echo: 'bg-echo-400/10 text-link border border-echo-400/25',
     },
     size: {
-      sm: 'text-xs px-2 py-0.5',
+      sm: 'text-xs px-2.5 py-1',
       md: 'text-sm px-2.5 py-1',
     },
   },

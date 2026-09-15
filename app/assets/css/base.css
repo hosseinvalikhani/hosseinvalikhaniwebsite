@@ -186,12 +186,19 @@
     transition: scale var(--duration-base) var(--ease-out-quint);
   }
 
-  .ds-nav-link[aria-current] {
+  /*
+    `[aria-current]` alone was the bug the audit found. TheHeader stamps aria-current="false"
+    on every home-page section link that is not in view — valid ARIA, and the only way to stop
+    Vue Router claiming all five are the current page — but an attribute-presence selector
+    matches "false" just as happily as "true". Every nav item rendered bold, underlined and
+    fully lit, so the one indicator that says where you are said it about everything.
+  */
+  .ds-nav-link[aria-current]:not([aria-current="false"]) {
     color: var(--ds-fg);
     font-weight: 600;
   }
 
-  .ds-nav-link[aria-current]::after {
+  .ds-nav-link[aria-current]:not([aria-current="false"])::after {
     scale: 1 1;
   }
 
@@ -338,6 +345,11 @@
   Reduced motion — honour it globally rather than per-component, so a component can never
   forget. Durations collapse instead of transitions being removed, which keeps state changes
   instant without breaking anything that listens for transitionend.
+
+  The delays have to collapse with them. Without that, `.ds-reveal` still waited out its
+  --ds-reveal-delay with `backwards` fill holding the element at opacity 0, so the hero's lead
+  and actions were invisible for up to 180ms and then snapped in — a staggered reveal, which is
+  precisely what the visitor asked not to be shown.
 */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -348,8 +360,10 @@
   *::before,
   *::after {
     animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
 }
@@ -365,5 +379,30 @@
 
   :focus-visible {
     outline: 2px solid CanvasText;
+  }
+
+  /* The stretched card link opts out of the base ring, so it needs its own forced-colors one. */
+  .ds-card-link:focus-visible::after {
+    outline: 2px solid CanvasText;
+  }
+
+  /*
+    A button whose shape comes from a background fill has no shape here — forced colours
+    replaces every background with Canvas. The <button> elements keep a UA border, but the
+    hero's actions are anchors styled as buttons, and those flattened into bare text with no
+    edge at all. Give the whole family a real border the UA can recolour; the inline `link`
+    variant is excluded because it is meant to read as text in a sentence.
+  */
+  .ds-button {
+    border: 1px solid ButtonText;
+  }
+
+  /*
+    Colour is never the only carrier of meaning, but here the underline *is* drawn with a
+    background colour, which forced colours would flatten to Canvas. Restate it as a system
+    colour so the current nav item stays marked by more than its font weight.
+  */
+  .ds-nav-link[aria-current]:not([aria-current="false"])::after {
+    background-color: Highlight;
   }
 }

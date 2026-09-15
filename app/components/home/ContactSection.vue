@@ -36,11 +36,17 @@ const profiles = computed(() => socials.filter(s => !s.href.startsWith('mailto:'
         </h3>
         <ul class="mt-4 flex flex-wrap gap-2">
           <li v-for="social in profiles" :key="social.href">
+            <!--
+              hairline-strong, not hairline. That border is the only thing that says these are
+              controls — there is no fill behind them — so WCAG 1.4.11 applies to it and it has
+              to clear 3:1 against the canvas. `hairline` is for rules and card edges, where
+              nothing is being identified as interactive; it measures 1.4:1.
+            -->
             <NuxtLink
               :to="social.href"
               target="_blank"
               :rel="social.isProfile ? 'me noopener noreferrer' : 'noopener noreferrer'"
-              class="inline-flex min-h-11 items-center gap-2 rounded-control border border-hairline px-4 text-sm font-medium text-fg-muted transition-colors duration-fast hover:border-hairline-strong hover:bg-raised hover:text-fg"
+              class="inline-flex min-h-11 items-center gap-2 rounded-control border border-hairline-strong px-4 text-sm font-medium text-fg-muted transition-colors duration-fast hover:bg-raised hover:text-fg"
             >
               <DsIcon :name="social.icon as never" :size="18" />
               {{ social.label }}

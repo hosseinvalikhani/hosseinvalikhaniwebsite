@@ -77,7 +77,7 @@ useSchemaOrg([
 </script>
 
 <template>
-  <section v-if="data" class="py-16 sm:py-24">
+  <section v-if="data" aria-labelledby="tag-heading" class="py-16 sm:py-24">
     <DsContainer>
       <DsBreadcrumb
         :items="[
@@ -90,7 +90,7 @@ useSchemaOrg([
       <DsEyebrow class="mt-8">
         Tagged
       </DsEyebrow>
-      <h1 class="mt-4 text-3xl text-balance">
+      <h1 id="tag-heading" class="mt-4 text-3xl text-balance">
         {{ label }}
       </h1>
       <p class="mt-6 max-w-prose text-lg text-fg-muted">
