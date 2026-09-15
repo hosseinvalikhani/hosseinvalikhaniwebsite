@@ -8,6 +8,15 @@
  *
  * `alt` is required by the type. Pass an empty string deliberately when the name is already
  * next to it, which is the normal case in the hero.
+ *
+ * `size` is a ceiling, not a fixed width. At 200px the hero avatar took roughly 40% of the
+ * height of a 320px screen and pushed the heading, the lead and the call to action below the
+ * fold — the reflow was correct but the proportions were not. `min()` caps it against the
+ * viewport so it gives way on a phone and is unchanged from `sm` upwards.
+ *
+ * The box is still reserved before the image arrives: the width resolves at layout time and
+ * `aspect-square` supplies the height, so this costs no layout shift. That matters more than
+ * usual here — the avatar sits at the top of the hero and is the site's largest CLS risk.
  */
 const { src, alt, size = 160, priority = false } = defineProps<{
   src: string
@@ -20,8 +29,8 @@ const { src, alt, size = 160, priority = false } = defineProps<{
 
 <template>
   <span
-    class="relative inline-block shrink-0 rounded-full p-1 ring-2 ring-accent"
-    :style="{ width: `${size + 8}px`, height: `${size + 8}px` }"
+    class="relative inline-block aspect-square shrink-0 rounded-full p-1 ring-2 ring-accent"
+    :style="{ width: `min(${size + 8}px, 42vw)` }"
   >
     <NuxtImg
       :src="src"

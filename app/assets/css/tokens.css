@@ -92,7 +92,25 @@
   --text-3xl--line-height: 1.1;
   --text-3xl--letter-spacing: -0.025em;
 
-  --text-display: clamp(2.5rem, 1.6rem + 4.4vw, 4.5rem);
+  /*
+    Re-fitted in Phase 14 so the heading survives a 320px screen.
+
+    At 320px the content box is 272px, and a display heading is usually one long unbreakable
+    word: a name. The old curve put it at 40px there, where "PLACEHOLDER" needs about 300px, so
+    it broke mid-word — and the clip on .ds-glow meant that before `overflow-wrap` was added it
+    was simply cut off, silently, with nothing looking broken.
+
+    Lowering the floor did nothing, which is the trap in clamp(): at 320px the *preferred* term
+    resolved to 1.6rem + 4.4vw = 39.7px, comfortably above any floor worth setting, so the floor
+    was never the binding constraint. The slope had to change, not the minimum.
+
+    The curve is now fitted to its two ends — 32px at 320px, 72px at 1440px — rather than picked
+    and then patched: 40px of growth over 1120px of viewport is 3.55vw, leaving 1.3rem of
+    intercept. Measured rather than assumed, uppercase Inter 800 runs about 0.69em per character,
+    so 32px fits twelve characters in that box. `overflow-wrap` in base.css stays as the backstop
+    for a name longer than any type scale can anticipate.
+  */
+  --text-display: clamp(2rem, 1.3rem + 3.55vw, 4.5rem);
   --text-display--line-height: 0.95;
   --text-display--letter-spacing: -0.035em;
   --text-display--font-weight: 800;

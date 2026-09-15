@@ -58,6 +58,20 @@
     One offset, declared once, on the scrolling box.
   */
 
+  /*
+    A heading long enough to overflow its line should break rather than be cut off.
+
+    `break-word` only ever acts when a single word genuinely cannot fit, so ordinary headings are
+    untouched — it is a floor under the type scale, not a wrapping strategy. Without it the
+    display size has to be tuned for the longest name anyone might ever have.
+  */
+  h1,
+  h2,
+  h3,
+  h4 {
+    overflow-wrap: break-word;
+  }
+
   /* Media never overflows its container or arrives without reserved space. */
   img,
   picture,

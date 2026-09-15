@@ -34,9 +34,15 @@ const sectionId = (to: string) => (to.includes('#') ? to.split('#')[1] : undefin
   >
     <DsContainer>
       <div class="flex h-16 items-center justify-between gap-4">
+        <!--
+          inline-flex and min-h-11 give this the same 44px target every other standalone control
+          holds. As bare text it was 24px tall: enough for WCAG 2.2 AA, which asks for 24, but
+          under our own bar — and it is the control someone reaches for to get home. The row is
+          64px tall, so nothing moves.
+        -->
         <NuxtLink
           to="/"
-          class="rounded-chip font-bold tracking-tight transition-colors duration-fast hover:text-accent-text"
+          class="inline-flex min-h-11 items-center rounded-chip font-bold tracking-tight transition-colors duration-fast hover:text-accent-text"
         >
           {{ profile.name }}
         </NuxtLink>
