@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A second push to the same branch makes the first run irrelevant. Cancelling it keeps the
+# queue honest about what is actually being tested.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` respects the lockfile exactly, which is the point of having one. It also runs
+      # `postinstall` → `nuxt prepare`, which generates the types the typecheck step needs.
+      - name: Install
+        run: npm ci
+
+      # The checks are ordered so the fastest thing that can fail, fails first. A typo should
+      # not wait on a build and a browser download to be reported.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run generate
+
+      # Everything below reads .output/public and needs nothing rebuilt.
+      - name: Output and metadata
+        run: npm run check
+
+      - name: Contrast
+        run: npm run check:contrast
+
+      - name: Budgets
+        run: npm run check:budget
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end (axe, responsive, interactions)
+        run: npm run test:e2e
+
+      - name: Lighthouse budgets
+        run: npm run check:perf
+
+      # Traces and reports are only interesting when something failed, and only then worth the
+      # upload time.
+      - name: Upload failure artefacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-artefacts
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore
