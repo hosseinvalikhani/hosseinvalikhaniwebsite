@@ -11,7 +11,8 @@
  *
  * Usage: node scripts/check-output.mjs   (after `npm run generate`)
  */
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
+import { join, sep } from 'node:path'
 import { existsSync } from 'node:fs'
 import process from 'node:process'
 
@@ -256,6 +257,63 @@ for (const relative of DRAFT_MUST_NOT_APPEAR_IN) {
   if (contents.includes(DRAFT_MARKER)) fail(`draft leaked into ${relative}`)
   else console.log(`  ✓ absent from ${relative}`)
 }
+
+/*
+  Metadata across every prerendered route, not just the named ones above.
+
+  EXPECTATIONS lists routes by hand, which is the right shape for "did this page render at all"
+  and the wrong shape for "is every page's metadata sound" — a new route would simply never be
+  checked. This walks the output instead, so coverage grows with the site.
+
+  Uniqueness is the part that cannot be checked one page at a time. Two routes sharing a title or
+  a description is how a small site ends up competing with itself in search results, and it only
+  becomes visible when they are all in the same list.
+
+  Pages marked noindex are excluded from the uniqueness comparison but still have to carry a
+  title: /404 and /design-system are deliberately not indexable, and /404.html is a byte-for-byte
+  copy of /404/index.html, so requiring them to differ would be asserting a bug.
+*/
+async function* htmlFiles(dir) {
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) yield* htmlFiles(path)
+    else if (entry.name.endsWith('.html')) yield path
+  }
+}
+
+console.log('metadata')
+
+const titles = new Map()
+const descriptions = new Map()
+
+for await (const file of htmlFiles(DIST)) {
+  const route = file.slice(DIST.length).split(sep).join('/')
+
+  // The SPA fallback shell has no page component and therefore no metadata by design.
+  if (route === '/200.html') continue
+
+  const html = await readFile(file, 'utf8')
+  const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/)?.[1]?.trim()
+  const description = html.match(/<meta name="description" content="([^"]*)"/)?.[1]?.trim()
+  const canonicals = (html.match(/rel="canonical"/g) ?? []).length
+  const noindex = /content="[^"]*noindex/.test(html)
+
+  if (!title) fail(`${route}: no <title>`)
+  if (!description) fail(`${route}: no meta description`)
+  if (canonicals !== 1) fail(`${route}: ${canonicals} canonical links, expected exactly 1`)
+
+  if (noindex) continue
+  if (title) {
+    if (titles.has(title)) fail(`${route}: duplicate title, shared with ${titles.get(title)} — "${title}"`)
+    else titles.set(title, route)
+  }
+  if (description) {
+    if (descriptions.has(description)) fail(`${route}: duplicate description, shared with ${descriptions.get(description)}`)
+    else descriptions.set(description, route)
+  }
+}
+
+console.log(`  ✓ ${titles.size} indexable route(s) with a unique title and description`)
 
 if (failures) {
   console.error(`\n${failures} check(s) failed.`)

@@ -15,6 +15,10 @@ definePageMeta({ robots: 'noindex, nofollow' })
 
 useHead({ title: 'Design system' })
 
+useSeoMeta({
+  description: 'Every colour, type size, radius and component this site is allowed to use, in both themes. A development surface — noindex, and excluded from the sitemap.',
+})
+
 const { profile } = useAppConfig()
 const iconNames = Object.keys(icons) as IconName[]
 

@@ -13,6 +13,15 @@ useHead({
   title: 'Page not found',
   meta: [{ name: 'robots', content: 'noindex, nofollow' }],
 })
+
+/*
+  A description on a noindex page still earns its place: it is what a chat client or a link
+  unfurler shows when someone pastes a dead link, and "no description" there reads as a broken
+  site rather than a missing page.
+*/
+useSeoMeta({
+  description: 'That page does not exist. The link may be out of date, or the page may have moved.',
+})
 </script>
 
 <template>

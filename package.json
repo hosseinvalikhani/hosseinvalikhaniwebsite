@@ -7,10 +7,17 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate && node scripts/static-404.mjs",
     "preview": "nuxt preview",
+    "serve": "node scripts/serve-output.mjs",
     "postinstall": "nuxt prepare",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
     "check": "node scripts/check-output.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
-    "check:budget": "node scripts/check-budget.mjs"
+    "check:budget": "node scripts/check-budget.mjs",
+    "check:perf": "node scripts/check-lighthouse.mjs",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run generate && npm run check && npm run check:contrast && npm run check:budget && npm run test:e2e && npm run check:perf"
   },
   "dependencies": {
     "@nuxt/content": "^3.16.0",
@@ -23,15 +30,21 @@
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@nuxt/eslint": "^1.17.0",
+    "@nuxt/test-utils": "^4.3.2",
     "@nuxtjs/seo": "^5.3.16",
+    "@playwright/test": "^1.63.0",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.3.3",
     "eslint": "^10.10.0",
     "eslint-plugin-vuejs-accessibility": "^2.6.0",
+    "happy-dom": "^20.14.5",
+    "lighthouse": "^13.4.1",
     "satori": "^0.33.4",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
+    "vitest": "^5.0.1",
     "vue-tsc": "^3.3.11"
   }
 }

@@ -22,6 +22,7 @@ const pad = (n: number) => String(n).padStart(2, '0')
       Safari/VoiceOver, which would lose the "3 items, item 1 of 3" that makes the order
       audible — and the order is the whole point of this section.
     -->
+    <!-- eslint-disable-next-line vuejs-accessibility/no-redundant-roles -- deliberate; see above -->
     <ol role="list" class="ds-timeline">
       <li v-for="(entry, i) in experience" :key="`${entry.company}-${entry.from}`" class="ds-timeline__item">
         <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
