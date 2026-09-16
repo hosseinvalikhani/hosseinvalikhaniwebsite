@@ -24,6 +24,17 @@ export default defineNuxtConfig({
   // prints a WARN on every dev start. Re-enable once that upstream mismatch is resolved.
   devtools: { enabled: false },
 
+  /**
+   * Bind the dev server to IPv4 explicitly.
+   *
+   * The default host is the *name* `localhost`, and on this machine Node resolves it to ::1 and
+   * binds there alone — `netstat` shows `[::1]:3000` and nothing on `127.0.0.1`. Chromium tries
+   * the IPv4 address first, gets a refused connection and does not fall back, so `npm run dev`
+   * starts cleanly, prints a URL, and serves a browser error. Naming the address rather than the
+   * hostname removes the resolution step that causes it. Use `--host` to expose it on the LAN.
+   */
+  devServer: { host: '127.0.0.1' },
+
   modules: [
     '@nuxt/content',
     '@nuxt/image',
