@@ -24,7 +24,9 @@ import { fileURLToPath } from 'node:url'
 import process from 'node:process'
 
 const PORT = 3211
-const BASE = `http://localhost:${PORT}`
+// Includes the base path the site is actually served from. Measuring the bare paths would
+// add a redirect hop to every run and report it as the site being slow.
+const BASE = `http://localhost:${PORT}/hosseinvalikhaniwebsite`
 const RUNS = Number(process.argv[2] || 3)
 
 const ROUTES = ['/', '/blog', '/blog/markdown-kitchen-sink', '/blog/tag/css']

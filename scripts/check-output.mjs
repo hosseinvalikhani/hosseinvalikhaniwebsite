@@ -18,6 +18,27 @@ import process from 'node:process'
 
 const DIST = '.output/public'
 
+/**
+ * Whether a robots.txt is expected in the output.
+ *
+ * false because the site deploys to a GitHub Pages project path. robots.txt is only ever
+ * read from the origin root, which on github.io belongs to a different repository, so
+ * @nuxtjs/robots refuses to emit one under a base path (nuxt.config.ts sets robotsTxt:
+ * false to match). The file is absent by design, not by accident.
+ *
+ * Set this back to true - and drop robotsTxt: false - the moment the site serves from a
+ * domain root, so the assertion returns with it instead of being quietly lost.
+ */
+const EXPECTS_ROBOTS_TXT = false
+
+/**
+ * The path the site is served from, mirroring app.baseURL in nuxt.config.ts.
+ *
+ * Its own constant because the rule that reads it is the only automated thing standing
+ * between a root-relative URL and a 404 in production.
+ */
+const BASE_PATH = '/hosseinvalikhaniwebsite/'
+
 /** Each route, and the markers that prove it actually rendered. */
 const EXPECTATIONS = [
   {
@@ -117,6 +138,8 @@ const EXPECTATIONS = [
   {
     route: '/robots.txt',
     file: `${DIST}/robots.txt`,
+    // Only meaningful when the site is served from a domain root - see EXPECTS_ROBOTS_TXT.
+    when: EXPECTS_ROBOTS_TXT,
     contains: [
       ['sitemap reference', /Sitemap: https:\/\//],
       ['style guide disallowed', /Disallow: \/design-system/],
@@ -161,6 +184,29 @@ const RULES = [
       catch {
         return false
       }
+    },
+  },
+  {
+    /*
+      Every root-relative URL has to carry the base path.
+
+      Anything that skips the router keeps the bare path it was written with, and on a
+      project-path deployment that resolves to the domain root - a different site. It fails
+      quietly: a missing /enhance.js takes the theme toggle, the copy buttons and the dialog
+      with it and reports nothing, because progressive enhancement degrades rather than
+      throws. Three such URLs shipped in the first build made against this base.
+
+      url() is included because the stylesheet is inlined into the page, so the font
+      references inside it resolve against the page rather than against /_nuxt/.
+    */
+    name: 'every root-relative URL carries the base path',
+    test: (html) => {
+      const urls = [
+        ...[...html.matchAll(/(?:href|src)="(\/[^"]*)"/g)].map(m => m[1]),
+        ...[...html.matchAll(/url\(\s*['"]?(\/[^'")]+)/g)].map(m => m[1]),
+      ]
+      const stray = [...new Set(urls.filter(url => !url.startsWith(BASE_PATH)))]
+      return stray.length === 0 || `outside ${BASE_PATH}: ${stray.join(', ')}`
     },
   },
   {
@@ -224,7 +270,13 @@ function fail(message) {
   console.error(`  ✖ ${message}`)
 }
 
-for (const { route, file, contains } of EXPECTATIONS) {
+for (const { route, file, contains, when } of EXPECTATIONS) {
+  if (when === false) {
+    console.log(`${route}`)
+    console.log('  - not expected in this deployment, skipped')
+    continue
+  }
+
   if (!existsSync(file)) {
     fail(`${route}: ${file} was not generated`)
     continue
@@ -241,8 +293,11 @@ for (const { route, file, contains } of EXPECTATIONS) {
   if (!file.endsWith('.html')) continue
 
   for (const rule of RULES) {
-    if (rule.test(html)) console.log(`  ✓ ${rule.name}`)
-    else fail(`${route}: ${rule.name}`)
+    // A rule returns true, or a string saying what it found. The string matters for rules
+    // that can fail in several places at once: "some URL is wrong" is not actionable.
+    const result = rule.test(html)
+    if (result === true) console.log(`  ✓ ${rule.name}`)
+    else fail(`${route}: ${rule.name}${typeof result === 'string' ? ` — ${result}` : ''}`)
   }
 }
 

@@ -81,7 +81,10 @@ test.describe('mobile navigation drawer', () => {
     await page.locator('[data-ds-dialog-open="nav-drawer"]').click()
     await expect(page.locator('#nav-drawer')).toBeVisible()
 
-    await page.locator('#nav-drawer a[href="/blog"]').click()
+    // Matched by suffix, not by the whole path: the site is served under a base path, so the
+    // href is /<base>/blog. Anchoring on the end keeps this test independent of where the
+    // site is mounted, which is not something it is trying to assert.
+    await page.locator('#nav-drawer a[href$="/blog"]').click()
     await page.waitForURL('**/blog')
     await expect(page.locator('#nav-drawer')).toBeHidden()
   })

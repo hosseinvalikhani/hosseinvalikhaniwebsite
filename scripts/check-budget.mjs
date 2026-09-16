@@ -48,9 +48,21 @@ async function* walk(dir) {
   }
 }
 
+/**
+ * The path the site is served from, mirroring app.baseURL in nuxt.config.ts.
+ *
+ * URLs in the markup carry it; the output directory does not - .output/public *is* the base,
+ * so /<base>/enhance.js lives at .output/public/enhance.js. Without stripping it, every lookup
+ * here resolves one directory too deep and the script dies on the first asset it measures.
+ */
+const BASE_PATH = '/hosseinvalikhaniwebsite/'
+
+const onDisk = path => (path.startsWith(BASE_PATH) ? `/${path.slice(BASE_PATH.length)}` : path)
+
 const transferSize = async (path) => {
-  try { return (await stat(`${DIST}${path}.gz`)).size }
-  catch { return (await stat(`${DIST}${path}`)).size }
+  const file = onDisk(path)
+  try { return (await stat(`${DIST}${file}.gz`)).size }
+  catch { return (await stat(`${DIST}${file}`)).size }
 }
 
 const LINK = /<link\b[^>]*\bhref="(\/[^"]+)"[^>]*>/g
