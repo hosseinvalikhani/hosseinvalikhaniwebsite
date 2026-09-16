@@ -70,9 +70,7 @@ useSchemaOrg([
     'name': profile.name,
     'jobTitle': profile.title,
     'description': profile.intro,
-    // Only when a photograph exists: the hero's monogram is drawn in the DOM, not a file, and
-    // an `image` pointing at nothing is worse for a parser than no `image` at all.
-    ...(profile.photo ? { image: profile.photo } : {}),
+    'image': profile.photo,
     // sameAs must agree with the rel="me" links in the footer — they are two statements of the
     // same claim, and a verifier that finds only one of them treats the profile as unconfirmed.
     'sameAs': socials.filter(s => s.isProfile).map(s => s.href),

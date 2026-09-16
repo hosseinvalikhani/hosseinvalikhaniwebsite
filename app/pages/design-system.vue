@@ -19,6 +19,7 @@ useSeoMeta({
   description: 'Every colour, type size, radius and component this site is allowed to use, in both themes. A development surface — noindex, and excluded from the sitemap.',
 })
 
+const { profile } = useAppConfig()
 const iconNames = Object.keys(icons) as IconName[]
 
 /**
@@ -699,8 +700,7 @@ const proportion = [
         </h2>
 
         <div class="mt-8 flex flex-wrap items-center gap-8">
-          <DsMark :size="120" label="Editor window and code mark" />
-          <DsAvatar src="/img/avatar-placeholder.svg" alt="" :size="120" />
+          <DsAvatar :src="profile.photo" alt="" :size="120" />
           <div>
             <p class="max-w-prose text-fg-muted">
               Width and height are always explicit, so the box is reserved before the image

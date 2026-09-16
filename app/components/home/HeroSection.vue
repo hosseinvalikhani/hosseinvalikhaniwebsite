@@ -63,7 +63,13 @@ const { profile } = useAppConfig()
           </p>
         </div>
 
-        <DsMark :size="200" class="shrink-0 self-start lg:self-auto" />
+        <DsAvatar
+          :src="profile.photo"
+          :alt="profile.photoAlt"
+          :size="200"
+          priority
+          class="shrink-0 self-start lg:self-auto"
+        />
       </div>
     </DsContainer>
   </section>
