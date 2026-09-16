@@ -71,9 +71,10 @@ follow from the single decision described there.
 | The site URL, modules, build hooks | [`nuxt.config.ts`](nuxt.config.ts) |
 | Client-side behaviour | [`public/enhance.js`](public/enhance.js) |
 
-**`app.config.ts` is currently all placeholders.** Every name, title and paragraph reads
-`PLACEHOLDER`. Replace it before deploying — the OG images bake your name into a PNG at build
-time, so stale content there ships as an image.
+**`app.config.ts` holds the real copy**, including the portrait at
+`public/img/hossein-valikhani.jpg` (800×800 — @nuxt/image derives the avif/webp variants from
+it). Swap that file and the `photoAlt` beside it together, and remember the OG images bake this
+content into a PNG at build time, so stale copy there ships as an image.
 
 ---
 
@@ -170,8 +171,6 @@ and `BASE` in `scripts/check-lighthouse.mjs`. A custom domain also wants `public
 
 ### Still outstanding
 
-1. **Replace the placeholders** in `app.config.ts` and swap `public/img/avatar-placeholder.svg`.
-   `site.name` is still `Personal Site`, and the OG images read `PLACEHOLDER Name`.
-2. **Prune the deploy.** About 6 MB of the 7.9 MB output is unreachable — see
+1. **Prune the deploy.** About 6 MB of the 7.9 MB output is unreachable — see
    [docs/decisions.md](docs/decisions.md#the-deploy-still-carries-6-mb-nothing-can-fetch).
-3. **Submit the sitemap** to Search Console.
+2. **Submit the sitemap** to Search Console.

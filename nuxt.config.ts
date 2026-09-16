@@ -57,7 +57,7 @@ export default defineNuxtConfig({
   // OG images, canonicals, feeds and the sitemap all derive from this. It is the *origin*
   // only — the project-pages subpath lives in app.baseURL below, and the SEO modules join
   // the two themselves. Repeating the subpath here produces doubled canonicals.
-  site: { url: 'https://hosseinvalikhani.github.io', name: 'Personal Site', defaultLocale: 'en' },
+  site: { url: 'https://hosseinvalikhani.github.io', name: 'Hossein Valikhani', defaultLocale: 'en' },
 
   app: {
     /**
