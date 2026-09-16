@@ -38,8 +38,14 @@ const props = withDefaults(defineProps<Props>(), {
   type: 'button',
 })
 
+/**
+ * `max-w-full` is load-bearing, not tidiness: a button is an inline-flex box sized by its
+ * content, so a label longer than the viewport — the contact email at 320px is 305px wide
+ * before padding — pushes the whole document sideways and breaks WCAG 1.4.10 Reflow. Capping
+ * the box makes the label wrap instead; see the span below for the other half of that.
+ */
 const classes = variants(
-  'relative inline-flex items-center justify-center gap-2 font-medium '
+  'relative inline-flex max-w-full items-center justify-center gap-2 font-medium '
   + 'transition-[background-color,border-color,color,opacity] duration-fast ease-out-quint '
   + 'disabled:pointer-events-none disabled:opacity-55',
   {
@@ -153,7 +159,13 @@ const attrs = computed(() => {
     </svg>
     <DsIcon v-else-if="props.icon" :name="props.icon" :size="props.size === 'sm' ? 18 : 20" />
 
-    <span v-if="!props.iconOnly">
+    <!--
+      Both classes are needed and neither is enough alone. A flex item defaults to
+      `min-width: auto`, which floors it at the label's min-content width, so the box refuses
+      to shrink no matter what `max-w-full` says; `break-words` is what then lets an
+      unbreakable run — an email address, a long URL — split rather than overflow.
+    -->
+    <span v-if="!props.iconOnly" class="min-w-0 break-words">
       <slot>{{ props.label }}</slot>
     </span>
 
