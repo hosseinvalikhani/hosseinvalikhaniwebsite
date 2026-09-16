@@ -89,6 +89,26 @@ Nearly every rule axe can fail is a colour rule, and a colour rule only fails in
 values are wrong. Phase 12 found a contrast failure that existed **only in the default theme**, on
 every page.
 
+### `navigation.spec.ts` waits for events, not for durations
+
+Every wait in that file used to be a `waitForTimeout`, and CI eventually failed on one: the hash
+landing test read `#contact` at 147px against a 129px limit, then 158px on the retry, for a
+position that settles at 89px. Nothing was wrong with the page. `scroll-behavior: smooth` animates
+the landing, the jump to `#contact` is ~2700px and takes **~900ms** to settle, and the test waited
+600. It had only ever passed because the machines it ran on were fast enough to make a 600ms guess
+look like a fact.
+
+Two habits came out of it:
+
+- **Wait for the condition, not for a duration.** `settleScroll()` polls the scroll position until
+  it stops moving; the indicator assertions use `expect.poll`. Both fail the same way they used to
+  when the behaviour is actually wrong — reintroducing the stacked-offset bug gives a *settled*
+  177px, which no amount of waiting turns into a pass.
+- **Run a flaky-looking spec on its own.** A second race in the same file failed 5 times out of 5
+  in isolation and had never failed in the suite: the other tests were slowing the page down past
+  the moment `enhance.js` starts listening. Parallel load is not a fixture, and CI's scheduling is
+  not yours.
+
 ### `assets.spec.ts` earns its place
 
 Inlining the stylesheet moved `url(../_fonts/x.woff2)` into the page, where a relative URL

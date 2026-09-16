@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 
 /**
@@ -11,21 +12,72 @@ import { expect, test } from '@playwright/test'
 
 const SECTIONS = ['about', 'experience', 'skills', 'contact'] as const
 
+/**
+ * Waits for a smooth scroll to finish, instead of guessing how long one takes.
+ *
+ * `scroll-behavior: smooth` in base.css animates every hash landing, and the duration is the
+ * browser's to pick — it grows with the distance and with how busy the main thread is. A fixed
+ * timeout therefore encodes the machine it was written on. It did: the jump to #contact is
+ * ~2700px and takes ~900ms to settle, against the 600ms this file used to wait, so the assertion
+ * was reading a position mid-flight and only passing because the local machine was fast enough.
+ * CI was not, and failed with 147px and then 158px for a landing that settles at 89px — a test
+ * about layout failing with a number about timing.
+ *
+ * So: poll the scroll position until it stops moving. The `scrollTop > 0` condition covers the
+ * other half of it — the browser does not always begin the scroll in the same task as the
+ * navigation (measured at up to a second after `goto` on a cold page), and without it a settle
+ * check resolves instantly against a page that has not started moving yet. The elapsed-time
+ * fallback keeps that from hanging on a target that genuinely needs no scroll.
+ */
+async function settleScroll(page: Page) {
+  await page.waitForFunction(() => new Promise<boolean>((resolve) => {
+    const box = document.scrollingElement!
+    const startedAt = performance.now()
+    let previous = box.scrollTop
+    let idleFrames = 0
+
+    const tick = () => {
+      idleFrames = box.scrollTop === previous ? idleFrames + 1 : 0
+      previous = box.scrollTop
+
+      if (idleFrames >= 10 && (box.scrollTop > 0 || performance.now() - startedAt > 1500))
+        resolve(true)
+      else
+        requestAnimationFrame(tick)
+    }
+
+    requestAnimationFrame(tick)
+  }), null, { timeout: 10_000 })
+}
+
+/** The sections the nav currently marks as read. Normally none or one. */
+function currentSectionLinks(page: Page) {
+  return page.$$eval(
+    '[data-ds-section-link]',
+    els => els.filter(el => el.getAttribute('aria-current') === 'true')
+      .map(el => (el as HTMLElement).dataset.dsSectionLink),
+  )
+}
+
+/*
+ * The two tests that name an expected section retry the assertion rather than wait a fixed time
+ * for the IntersectionObserver in enhance.js to answer. A fixed wait races the observer's
+ * readiness: run on their own rather than behind a loaded suite, `tracks the section under the
+ * reader` failed 5 times out of 5 with *nothing* marked, because the page finished loading before
+ * the script was listening. It had never failed in the suite, where other tests slowed it down.
+ *
+ * Retrying does not soften what they pin. The bug they exist for — the indicator naming the
+ * section before the one you are reading — is a wrong answer that stays wrong, so the poll runs
+ * out its timeout and fails exactly as it would have.
+ */
 test.describe('section indicator', () => {
   for (const section of SECTIONS) {
     test(`clicking "${section}" marks that section, not the one before it`, async ({ page }) => {
       await page.goto('/')
       await page.locator(`[data-ds-section-link="${section}"]`).click()
 
-      // Wait out the smooth scroll and let the observer settle.
-      await page.waitForTimeout(1200)
-
-      const current = await page.$$eval(
-        '[data-ds-section-link]',
-        els => els.filter(el => el.getAttribute('aria-current') === 'true')
-          .map(el => (el as HTMLElement).dataset.dsSectionLink),
-      )
-      expect(current).toEqual([section])
+      await settleScroll(page)
+      await expect.poll(() => currentSectionLinks(page)).toEqual([section])
     })
   }
 
@@ -38,14 +90,11 @@ test.describe('section indicator', () => {
         const middle = window.scrollY + el.getBoundingClientRect().top + Math.min(el.offsetHeight / 2, 300)
         window.scrollTo({ top: middle, behavior: 'instant' })
       }, section)
-      await page.waitForTimeout(500)
 
-      const current = await page.$$eval(
-        '[data-ds-section-link]',
-        els => els.filter(el => el.getAttribute('aria-current') === 'true')
-          .map(el => (el as HTMLElement).dataset.dsSectionLink),
-      )
-      expect(current, `scrolled to the middle of ${section}`).toEqual([section])
+      await expect.poll(
+        () => currentSectionLinks(page),
+        { message: `scrolled to the middle of ${section}` },
+      ).toEqual([section])
     }
   })
 
@@ -68,7 +117,7 @@ test.describe('hash targets clear the sticky header', () => {
 
     for (const section of SECTIONS) {
       await page.goto(`/#${section}`)
-      await page.waitForTimeout(600)
+      await settleScroll(page)
       const top = await page.locator(`#${section}`).evaluate(el => el.getBoundingClientRect().top)
 
       expect(top, `#${section} must not be behind the header`).toBeGreaterThanOrEqual(headerHeight)
@@ -87,7 +136,7 @@ test.describe('hash targets clear the sticky header', () => {
 
     for (const id of ids) {
       await page.goto(`/blog/markdown-kitchen-sink#${id}`)
-      await page.waitForTimeout(500)
+      await settleScroll(page)
       const top = await page.locator(`#${id}`).evaluate(el => el.getBoundingClientRect().top)
       expect(top, `#${id}`).toBeGreaterThanOrEqual(headerHeight)
       expect(top, `#${id} is offset too far`).toBeLessThan(headerHeight + 64)
