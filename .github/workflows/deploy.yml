@@ -1,0 +1,70 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  # Publishing by hand is useful when the last run failed for a reason outside the code —
+  # a Pages outage, an expired token — and nothing needs to be committed to retry.
+  workflow_dispatch:
+
+# Pages deployments are the only thing here that touches state outside the run, so they need
+# the narrow token that actions/deploy-pages exchanges for a deployment.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Deployments are not interchangeable the way CI runs are: the last one to finish is what the
+# world sees. Queue them instead of cancelling, so a superseded build never lands after the
+# build that replaced it. cancel-in-progress stays false for exactly that reason.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` respects the lockfile exactly and runs postinstall → `nuxt prepare`, which
+      # writes the generated types the build reads.
+      - name: Install
+        run: npm ci
+
+      # `generate` is `nuxt generate` plus scripts/static-404.mjs, which replaces Nuxt's empty
+      # SPA shell at 404.html with the prerendered /404 route. GitHub Pages serves that file
+      # for every unknown URL, so without the second half an unknown path is a blank page.
+      - name: Build
+        run: npm run generate
+
+      # The same assertions CI runs, against the bytes actually about to be published rather
+      # than against an equivalent build elsewhere. A prerender that silently dropped a
+      # component still exits 0, so this is the only thing standing between that and the
+      # live site.
+      - name: Output and metadata
+        run: npm run check
+
+      - uses: actions/configure-pages@v5
+
+      # Uploads .output/public as a Pages artifact. This path bypasses Jekyll entirely, so the
+      # /_nuxt/ directory survives despite the leading underscore; public/.nojekyll keeps that
+      # true if the source is ever switched back to branch-based publishing.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .output/public
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
