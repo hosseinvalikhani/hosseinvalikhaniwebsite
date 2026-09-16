@@ -61,6 +61,28 @@ the network. For 13 icons: ~2 KB, zero requests.
 
 ---
 
+## The avatar is encoded at quality 90, the rest at 72
+
+**Decision.** `image.quality` in `nuxt.config.ts` stays at 72; `DsAvatar` passes 90.
+
+**Why.** 72 was picked for blog imagery, which is mostly flat UI and survives it. A face does
+not: skin is a slow gradient and an eye is fine detail, which are the first things a WebP encoder
+trades away — and the hero portrait is the one image on the site rendered large and looked at
+directly. The 2x variant costs 7.9 KB at 72 and 17.7 KB at 90, and 95 (26.9 KB) does not pay for
+itself.
+
+The extra ~10 KB lands on the element `priority` marks as the likely LCP candidate, so it was
+measured rather than assumed: home-page LCP is **1353 ms** against a 1600 ms budget, the same
+figure recorded before the change. It moved nothing because the avatar is not what LCP picks — at phone width the
+hero's lead paragraph wraps to four lines and beats it on area, which is the same measurement
+that decided not to animate that paragraph.
+
+**What would change it.** LCP creeping toward the budget — 82 costs 11.1 KB and takes back most
+of the difference. Or a second large photograph, at which point the global default is the thing
+to revisit.
+
+---
+
 ## Three colour tiers, and a lint rule enforcing them
 
 **Decision.** Ramps → semantic roles → utilities. `text-slate-400` is an error outside

@@ -72,9 +72,10 @@ follow from the single decision described there.
 | Client-side behaviour | [`public/enhance.js`](public/enhance.js) |
 
 **`app.config.ts` holds the real copy**, including the portrait at
-`public/img/hossein-valikhani.jpg` (800×800 — @nuxt/image derives the avif/webp variants from
-it). Swap that file and the `photoAlt` beside it together, and remember the OG images bake this
-content into a PNG at build time, so stale copy there ships as an image.
+`public/img/hossein-valikhani.jpg` (800×800 — @nuxt/image derives the webp variants from it, at
+quality 90 rather than the global 72; see [`DsAvatar`](app/components/ds/DsAvatar.vue)). Swap
+that file and the `photoAlt` beside it together, and remember the OG images bake this content
+into a PNG at build time, so stale copy there ships as an image.
 
 ---
 

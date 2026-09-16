@@ -177,7 +177,7 @@ full width. Not creating the conflict is cheaper than papering over it.
 | `DsContainer` | `page` (72rem) or `prose` (65ch). |
 | `DsSection` | Titled section, labelled by its own heading. |
 | `DsEyebrow` | The signature mono label. `decorative` hides it from screen readers. |
-| `DsAvatar` | `size` is a **ceiling** — `min(size, 42vw)`. Explicit dimensions, zero CLS. |
+| `DsAvatar` | `size` is a **ceiling** — `min(size, 42vw)`. Explicit dimensions, zero CLS. WebP at `quality` 90, not the global 72. |
 | `DsDialog` | Native `<dialog>`. Addressed by `id`. |
 | `DsThemeToggle`, `DsCopyButton` | Markup only; behaviour in `enhance.js`. |
 | `DsBreadcrumb`, `DsSkipLink`, `DsVisuallyHidden` | — |
