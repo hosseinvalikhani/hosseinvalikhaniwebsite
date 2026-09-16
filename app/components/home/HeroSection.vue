@@ -63,7 +63,7 @@ const { profile } = useAppConfig()
           </p>
         </div>
 
-        <DsMonogram :size="200" class="shrink-0 self-start lg:self-auto" />
+        <DsMark :size="200" class="shrink-0 self-start lg:self-auto" />
       </div>
     </DsContainer>
   </section>

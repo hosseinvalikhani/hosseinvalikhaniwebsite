@@ -699,7 +699,7 @@ const proportion = [
         </h2>
 
         <div class="mt-8 flex flex-wrap items-center gap-8">
-          <DsMonogram :size="120" label="HV monogram" />
+          <DsMark :size="120" label="Angle bracket mark" />
           <DsAvatar src="/img/avatar-placeholder.svg" alt="" :size="120" />
           <div>
             <p class="max-w-prose text-fg-muted">

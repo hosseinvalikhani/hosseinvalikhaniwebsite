@@ -43,7 +43,7 @@ export interface Profile {
   intro: string
   about: string
   /**
-   * Optional. The hero draws DsMonogram rather than an image, so this feeds only the `image`
+   * Optional. The hero draws DsMark rather than an image, so this feeds only the `image`
    * property of the Person entity — set it if a photograph is ever added back.
    */
   photo?: string
