@@ -4,6 +4,18 @@ import { join } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import { withReadingTime } from './lib/reading-time'
 
+/**
+ * Where the site is served from.
+ *
+ * GitHub Pages serves a project repository under /<repo>/. Nitro does *not* fold this into
+ * `publicAssets[].baseURL` - those stay /_nuxt, /_fonts and so on - so anything that builds
+ * a browser-facing URL out of them has to add this itself. The `nitro:init` hook below is
+ * the only such place, and it reads this constant rather than repeating the literal.
+ *
+ * Trailing slash required: Nuxt concatenates rather than joins.
+ */
+const BASE_URL = '/hosseinvalikhaniwebsite/'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -42,9 +54,24 @@ export default defineNuxtConfig({
     '~/components',
   ],
 
-  // TODO(phase 16): replace with the real domain before the production build —
-  // OG images, canonicals, feeds and the sitemap all derive from this.
-  site: { url: 'https://example.com', name: 'Personal Site', defaultLocale: 'en' },
+  // OG images, canonicals, feeds and the sitemap all derive from this. It is the *origin*
+  // only — the project-pages subpath lives in app.baseURL below, and the SEO modules join
+  // the two themselves. Repeating the subpath here produces doubled canonicals.
+  site: { url: 'https://hosseinvalikhani.github.io', name: 'Personal Site', defaultLocale: 'en' },
+
+  app: {
+    /**
+     * GitHub Pages serves a project repository from /<repo>/, not from the domain root, so
+     * every asset URL, router path and prerendered link has to carry that prefix or it
+     * resolves one level too high and 404s. Both slashes are required: Nuxt joins this with
+     * asset paths by concatenation, so '/hosseinvalikhaniwebsite' would emit
+     * '/hosseinvalikhaniwebsite_nuxt/…'.
+     *
+     * This is the only value that changes if the site moves to a custom domain or to a
+     * <user>.github.io repository — both serve from the root, so it becomes '/'.
+     */
+    baseURL: BASE_URL,
+  },
 
   // classSuffix: '' puts `.dark` / `.light` on <html>, which is what the token layer targets.
   // preference 'system' honours the visitor's OS setting on a first visit; fallback 'dark' is
@@ -111,7 +138,12 @@ export default defineNuxtConfig({
         const urlFor = new Map<string, string>()
         for (const asset of nitro.options.publicAssets) {
           if (!existsSync(asset.dir)) continue
-          const base = (asset.baseURL ?? '/').replace(/\/$/, '')
+          // BASE_URL, not asset.baseURL alone: these become href attributes, and Nitro's
+          // asset base stays /_fonts no matter where the app is mounted. Without the app
+          // base the preload 404s while the stylesheet still works, because a relative
+          // url() resolves correctly - so the font just arrives late and the layout shifts,
+          // which is the exact regression the preload exists to prevent.
+          const base = BASE_URL.replace(/\/$/, '') + (asset.baseURL ?? '/').replace(/\/$/, '')
           for (const file of await readdir(asset.dir)) {
             if (file.endsWith('.woff2')) urlFor.set(file, `${base}/${file}`)
           }
@@ -188,10 +220,21 @@ export default defineNuxtConfig({
           scripts/check-budget.mjs counts inline <style> as CSS for exactly this reason, so the
           bytes do not disappear from the budget by moving.
         */
-        const cssHref = route.contents.match(/<link rel="stylesheet"[^>]*href="(\/_nuxt\/[^"]+\.css)"[^>]*>/)
+        /*
+          The href now carries the app base (/<repo>/_nuxt/entry.css), so this pattern must
+          not anchor /_nuxt at the start of the path. While it did, the match failed, the
+          replacement never ran, and every page shipped a linked stylesheet instead of an
+          inlined one - no error, no warning, just the 74-151ms of LCP this block buys
+          quietly handed back.
+        */
+        const cssHref = route.contents.match(/<link rel="stylesheet"[^>]*href="([^"]*\/_nuxt\/[^"]+\.css)"[^>]*>/)
         if (cssHref) {
+          // asset.dir is registered against the bare /_nuxt, so the app base has to come
+          // off before the remainder can be resolved against it.
+          const assetPath = cssHref[1].startsWith(BASE_URL) ? `/${cssHref[1].slice(BASE_URL.length)}` : cssHref[1]
+
           for (const asset of nitro.options.publicAssets) {
-            const file = join(asset.dir, cssHref[1].replace((asset.baseURL ?? '/').replace(/\/$/, ''), ''))
+            const file = join(asset.dir, assetPath.replace((asset.baseURL ?? '/').replace(/\/$/, ''), ''))
             if (!existsSync(file)) continue
             const css = await readFile(file, 'utf8')
             route.contents = route.contents.replace(cssHref[0], `<style>${absolutise(css, cssHref[1])}</style>`)
@@ -296,7 +339,35 @@ export default defineNuxtConfig({
 
   // Nothing but the style guide is disallowed; it is a development surface with no reason to
   // be indexed, and it is the only route excluded from the sitemap.
-  robots: { disallow: ['/design-system'] },
+  //
+  // robotsTxt is off because this deploys to a GitHub Pages *project* path. A crawler only
+  // ever reads https://<host>/robots.txt — the origin root, which on github.io belongs to a
+  // different repository — so a robots.txt emitted under /hosseinvalikhaniwebsite/ would
+  // never be fetched by anything. @nuxtjs/robots hard-errors on the combination rather than
+  // shipping a file that cannot work. The per-page `noindex` meta tags are unaffected and
+  // still do the actual work; the sitemap has to be submitted to Search Console by hand.
+  robots: { disallow: ['/design-system'], robotsTxt: false },
+
+  // Two adjustments, both caused by serving from a base path rather than by bad markup.
+  //
+  // trailing-slash: every in-page anchor is now /hosseinvalikhaniwebsite/#section, and the
+  // inspection reads that required base-path slash as a stray one — 116 warnings describing
+  // correct markup. Real broken-link detection is a different inspection and stays on.
+  linkChecker: {
+    skipInspections: ['trailing-slash'],
+
+    /*
+      Both feeds are files written to the output root, not Nitro routes, so the link checker
+      probes them against the prerender server — where server routes are mounted without the
+      base prefix — and reports /<base>/rss.xml as a 404. The file is at .output/public/rss.xml
+      and is served at /<base>/rss.xml, so the link is right and the probe is wrong. This is the
+      same class of exclusion the module already ships for /llms.txt and /_* paths.
+
+      Scoped to these two names rather than disabling no-error-response, which is the
+      inspection that catches genuinely broken links.
+    */
+    excludeLinks: [/\/(rss\.xml|feed\.json)$/],
+  },
 
   routeRules: {
     '/_nuxt/**': { headers: { 'cache-control': 'public,max-age=31536000,immutable' } },

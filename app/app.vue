@@ -1,5 +1,18 @@
 <script setup lang="ts">
+import { withBase } from 'ufo'
+
 const { profile, socials } = useAppConfig()
+
+/*
+  Everything below is emitted into <head> as a literal string, so none of it passes through
+  the router and nothing applies app.baseURL to it. On a GitHub Pages project site that
+  prefix is not cosmetic: '/enhance.js' resolves to the domain root, which belongs to a
+  different repository, and 404s — taking the theme toggle, the copy buttons and the dialog
+  with it, silently, because progressive enhancement degrades rather than errors.
+
+  withBase is idempotent, so this stays correct if the base ever becomes '/'.
+*/
+const base = useRuntimeConfig().app.baseURL
 
 useHead({
   titleTemplate: title => (title ? `${title} · ${profile.name}` : profile.name),
@@ -7,8 +20,8 @@ useHead({
   link: [
     // Feed autodiscovery. Readers and browser extensions look for this in <head>; a feed that
     // exists but is not announced here is one that has to be guessed at by URL.
-    { rel: 'alternate', type: 'application/rss+xml', title: `${profile.name} — RSS`, href: '/rss.xml' },
-    { rel: 'alternate', type: 'application/feed+json', title: `${profile.name} — JSON Feed`, href: '/feed.json' },
+    { rel: 'alternate', type: 'application/rss+xml', title: `${profile.name} — RSS`, href: withBase('/rss.xml', base) },
+    { rel: 'alternate', type: 'application/feed+json', title: `${profile.name} — JSON Feed`, href: withBase('/feed.json', base) },
   ],
   script: [
     /*
@@ -21,7 +34,7 @@ useHead({
       It is served from /public rather than bundled: it has no imports and no syntax that needs
       compiling, so keeping it out of the build means what ships is what is in the repo.
     */
-    { src: '/enhance.js', defer: true },
+    { src: withBase('/enhance.js', base), defer: true },
     {
       /*
         Speculation Rules. With no client router every navigation is a real one, so the browser

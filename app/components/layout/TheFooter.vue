@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { withBase } from 'ufo'
+
 /**
  * Site footer.
  *
@@ -7,6 +9,11 @@
  * agree. Only links that genuinely represent this person get it; a mailto does not.
  */
 const { socials, profile } = useAppConfig()
+
+// `external` makes NuxtLink render a plain <a>, which skips the router — and with it the
+// app.baseURL prefix every other link on the page gets. The feed is a real file on disk,
+// not a route, so the prefix has to be applied by hand.
+const rssHref = withBase('/rss.xml', useRuntimeConfig().app.baseURL)
 
 const year = new Date().getFullYear()
 </script>
@@ -47,7 +54,7 @@ const year = new Date().getFullYear()
             </li>
             <li>
               <NuxtLink
-                to="/rss.xml"
+                :to="rssHref"
                 external
                 class="inline-flex size-11 items-center justify-center rounded-control text-fg-muted transition-colors duration-fast hover:bg-raised hover:text-fg"
               >
