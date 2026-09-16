@@ -40,7 +40,7 @@ follow from the single decision described there.
 |---|---|
 | `npm run dev` | Dev server. Hot reload. **Still hydrates Vue** — see the warning below. |
 | `npm run generate` | Build the static site into `.output/public`, then fix `404.html` |
-| `npm run serve` | Serve `.output/public` the way a host would, including brotli |
+| `npm run serve` | Serve `.output/public` the way a host would, including brotli. Mounts the site at its base path, at <http://localhost:3000/hosseinvalikhaniwebsite/>; bare paths redirect there |
 | `npm run verify` | **All nine checks.** What CI runs. Do this before you push. |
 | `npm run typecheck` | `vue-tsc`, zero errors expected |
 | `npm run lint` | ESLint, including the accessibility plugin and the raw-ramp ban |
@@ -128,15 +128,50 @@ docs/                    This documentation
 
 ---
 
-## Before you deploy
+## Deployment
 
-Phase 16 is not done. Outstanding:
+The site deploys to GitHub Pages from `.github/workflows/deploy.yml` on every push to `main`,
+and can be run by hand from the Actions tab. The workflow installs, runs `npm run generate`,
+re-runs `npm run check` against the bytes it is about to publish, and uploads `.output/public`
+as a Pages artifact. `ci.yml` runs the full verification suite separately, so a flaky
+Lighthouse run cannot block a deploy and a deploy cannot skip the checks that matter.
 
-1. **Set `site.url`** in `nuxt.config.ts` to the real domain, *before* building. Canonicals, OG
-   images, feeds and the sitemap all derive from it.
-2. **Replace the placeholders** in `app.config.ts` and swap `public/img/avatar-placeholder.svg`.
-3. **Pick a host** and configure headers (CSP, `X-Content-Type-Options`, `Referrer-Policy`,
-   immutable caching on `/_nuxt/*`).
-4. **Prune the deploy.** About 6 MB of the 7.9 MB output is unreachable — see
+One setting has to be made in the GitHub UI, once: **Settings → Pages → Build and deployment →
+Source → GitHub Actions**. Until that is set the workflow fails at the deploy step.
+
+### The base path
+
+Pages serves a project repository from `/<repo>/`, so `app.baseURL` is
+`/hosseinvalikhaniwebsite/` and `site.url` is the origin alone — the SEO modules join the two.
+Live at <https://hosseinvalikhani.github.io/hosseinvalikhaniwebsite/>.
+
+Anything that does not go through the router keeps whatever path it was written with, and a
+bare `/enhance.js` resolves to the domain root — a different site. That failure is silent,
+so `scripts/check-output.mjs` asserts that every root-relative `href`, `src` and `url()` in
+the built HTML starts with the base path. Three URLs were wrong in the first build made
+against it.
+
+Moving to a custom domain or to a `<user>.github.io` repository means serving from the root.
+Four constants change together, all commented where they are defined: `BASE_URL` in
+`nuxt.config.ts`, `BASE_PATH` in `scripts/check-output.mjs` and in `scripts/check-budget.mjs`,
+and `BASE` in `scripts/check-lighthouse.mjs`. A custom domain also wants `public/CNAME`.
+
+### What Pages cannot do
+
+- **No response headers.** The `routeRules` cache-control on `/_nuxt/**` is inert here, as any
+  CSP, `X-Content-Type-Options` or `Referrer-Policy` would be. Pages sends its own headers and
+  offers no hook. Getting them needs a host that has one — Cloudflare Pages or Netlify — or a
+  proxy in front. Nothing in the build has to change for that; the output is the same.
+- **No `robots.txt`.** Crawlers read it only from the origin root, which belongs to the
+  `hosseinvalikhani.github.io` repository, not this one. `@nuxtjs/robots` refuses to emit one
+  under a base path rather than ship a file nothing will fetch, so `robotsTxt: false` is set to
+  match. Per-page `noindex` still works and still covers `/design-system`; the sitemap has to
+  be submitted to Search Console by hand.
+
+### Still outstanding
+
+1. **Replace the placeholders** in `app.config.ts` and swap `public/img/avatar-placeholder.svg`.
+   `site.name` is still `Personal Site`, and the OG images read `PLACEHOLDER Name`.
+2. **Prune the deploy.** About 6 MB of the 7.9 MB output is unreachable — see
    [docs/decisions.md](docs/decisions.md#the-deploy-still-carries-6-mb-nothing-can-fetch).
-5. **Submit the sitemap** to Search Console.
+3. **Submit the sitemap** to Search Console.
