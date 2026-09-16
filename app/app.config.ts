@@ -42,8 +42,11 @@ export interface Profile {
   title: string
   intro: string
   about: string
-  photo: string
-  photoAlt: string
+  /**
+   * Optional. The hero draws DsMonogram rather than an image, so this feeds only the `image`
+   * property of the Person entity — set it if a photograph is ever added back.
+   */
+  photo?: string
   location?: string
   email: string
 }
@@ -64,10 +67,6 @@ export default defineAppConfig({
       + 'from the Options API to the Composition API, and the documentation that made both stick. I '
       + 'treat accessibility as a default rather than an audit item, and I like leaving a codebase '
       + 'easier to work in than I found it. I studied Computer Engineering at Semnan University.',
-    // 800×800 so the hero's 200px circle still has headroom at 2x. @nuxt/image generates the
-    // avif/webp variants at build time from this one file, so it is the only copy to maintain.
-    photo: '/img/hossein-valikhani.jpg',
-    photoAlt: 'Hossein Valikhani, wearing glasses and a black T-shirt',
     email: 'Hosseinvalikhani1@gmail.com',
   } satisfies Profile,
 

@@ -71,10 +71,11 @@ follow from the single decision described there.
 | The site URL, modules, build hooks | [`nuxt.config.ts`](nuxt.config.ts) |
 | Client-side behaviour | [`public/enhance.js`](public/enhance.js) |
 
-**`app.config.ts` holds the real copy**, including the portrait at
-`public/img/hossein-valikhani.jpg` (800×800 — @nuxt/image derives the avif/webp variants from
-it). Swap that file and the `photoAlt` beside it together, and remember the OG images bake this
-content into a PNG at build time, so stale copy there ships as an image.
+**`app.config.ts` holds the real copy.** The hero's identity mark is not in there: it is drawn
+by [`DsMonogram`](app/components/ds/DsMonogram.vue) as inline SVG, because it has to follow the
+theme toggle and an SVG behind an `<img>` cannot. `profile.photo` is optional and now feeds only
+the `image` property of the Person entity. Remember that the OG images bake this content into a
+PNG at build time, so stale copy there ships as an image.
 
 ---
 
