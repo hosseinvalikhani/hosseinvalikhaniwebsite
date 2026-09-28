@@ -58,6 +58,9 @@ export const icons = {
   'arrow-up-right': {
     d: 'M8 16 16 8m0 0H9m7 0v7',
   },
+  'chevron-down': {
+    d: 'm6 9 6 6 6-6',
+  },
   copy: {
     d: 'M9 9V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-4M4 10a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Z',
   },

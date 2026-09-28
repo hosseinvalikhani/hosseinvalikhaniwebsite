@@ -225,6 +225,34 @@
   }
 
   /*
+    Post outline links. Same rule as the nav: the current heading is marked by a bar, a colour
+    and a weight change together, never colour alone. The bar sits on the list's own hairline
+    (margin-inline-start: -1px) so the outline reads as one rail with a marker moving down it.
+  */
+  .ds-toc-link {
+    display: block;
+    margin-inline-start: -1px;
+    border-inline-start: 2px solid transparent;
+    padding-block: 0.25rem;
+    padding-inline-start: 1rem;
+    color: var(--ds-fg-muted);
+    text-wrap: pretty;
+    transition:
+      color var(--duration-fast) var(--ease-out-quint),
+      border-color var(--duration-fast) var(--ease-out-quint);
+  }
+
+  .ds-toc-link:hover {
+    color: var(--ds-fg);
+  }
+
+  .ds-toc-link[aria-current]:not([aria-current="false"]) {
+    border-inline-start-color: var(--ds-accent-text);
+    color: var(--ds-fg);
+    font-weight: 600;
+  }
+
+  /*
     State-driven icon swapping.
 
     Both the theme toggle and the copy button render every icon they might need and let an
@@ -462,5 +490,10 @@
   */
   .ds-nav-link[aria-current]:not([aria-current="false"])::after {
     background-color: Highlight;
+  }
+
+  /* The same for the post outline's bar, which is a border colour forced colours would flatten. */
+  .ds-toc-link[aria-current]:not([aria-current="false"]) {
+    border-inline-start-color: Highlight;
   }
 }

@@ -15,15 +15,15 @@
  *
  * Two things about `sizes` that both fail silently rather than warning:
  *
- * 1. The units must be ones @nuxt/image can resolve to pixels. `md:65ch` reads naturally next
- *    to the prose measure but is unparseable, and it poisoned the whole calculation — the
+ * 1. The units must be ones @nuxt/image can resolve to pixels. `md:48rem` reads naturally next
+ *    to the article column but is unparseable, and it poisoned the whole calculation — the
  *    generated srcset was "1w, 2w" and the src pointed at a 2×2-pixel rendering of the image.
- *    704px is that same 65ch measure at the base font size.
+ *    768px is that same --container-article at the base font size; change them together.
  * 2. Every breakpoint needs naming. With an unprefixed `100vw` there is no screen width to
  *    resolve against, and the candidate widths came out as 1 and 2 again.
  *
  * Neither produced a build warning, so the only way to catch it is to read the generated
- * srcset. Current output: 640w, 704w, 1280w, 1408w.
+ * srcset. Expected output: 640w, 768w, 1280w, 1536w.
  */
 const { src = '', alt = '', width, height } = defineProps<{
   src?: string
@@ -41,7 +41,7 @@ const { src = '', alt = '', width, height } = defineProps<{
     :height="height"
     loading="lazy"
     decoding="async"
-    sizes="xs:100vw sm:100vw md:704px"
+    sizes="xs:100vw sm:100vw md:768px"
     class="mt-6 h-auto w-full rounded-panel border border-hairline bg-surface"
   />
 </template>

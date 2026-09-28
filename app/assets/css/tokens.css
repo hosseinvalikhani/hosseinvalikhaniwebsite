@@ -135,6 +135,12 @@
    * Layout
    * ---------------------------------------------------------------- */
   --container-prose: 65ch;
+  /*
+    The post column. Wider than `prose` because the body copy is set at text-lg: 48rem is about
+    75 characters of 18px Inter, the upper end of a comfortable measure, and it gives code blocks
+    and tables room before they have to scroll. ProseImg's `sizes` is this value in pixels.
+  */
+  --container-article: 48rem;
   --container-page: 72rem;
 }
 

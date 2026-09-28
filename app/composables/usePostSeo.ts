@@ -5,6 +5,8 @@ interface PostLike {
   date?: string
   updated?: string
   tags?: string[]
+  readingTime?: number
+  image?: string
 }
 
 /**
@@ -51,6 +53,10 @@ export function usePostSeo(post: PostLike) {
       'datePublished': post.date,
       'dateModified': post.updated ?? post.date,
       'keywords': post.tags,
+      // Both are rendered on the page — the reading time in the meta row, the image as the
+      // post's cover — which is the condition for declaring them here at all.
+      ...(post.readingTime ? { timeRequired: `PT${post.readingTime}M` } : {}),
+      ...(post.image ? { image: post.image } : {}),
       'author': { '@id': `${useSiteConfig().url}/#identity` },
     }),
     defineBreadcrumb({

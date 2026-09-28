@@ -67,6 +67,23 @@ Two details worth knowing:
   An empty `article:modified_time` is worse than none.
 - The article's `author` is `{ '@id': '…/#identity' }` — a **reference** to the site-wide `Person`,
   not a repeated inline copy. That is what makes it one graph instead of several disconnected ones.
+- `timeRequired` (`PT3M`) is added from the reading time, and `image` only when the post has a cover.
+
+### What the post page shows, and why
+
+Each of these exists partly because the schema above claims it — the governing idea, applied:
+
+| On the page | Backs |
+|---|---|
+| Byline (`PostByline`, links `rel="author"` to `/#about`) | `author`, `article:author` |
+| "Updated …" in `PostMeta`, only when `updated` is set | `dateModified` |
+| "N min read" | `timeRequired` |
+| Cover image, when `image` is set | `image` |
+| The description, as the standfirst under the title | the meta description |
+
+Two more are for crawl paths rather than schema: the **outline** (`PostToc`) links every h2/h3 by
+its id, which is what search engines use for "jump to" section links, and the **pager**
+(`PostPager`) links each post to its neighbours so no post is reachable only through the listing.
 
 ---
 

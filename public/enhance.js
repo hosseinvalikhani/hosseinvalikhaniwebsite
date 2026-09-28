@@ -265,9 +265,18 @@
       // Several sections can be in view at once; the topmost in document order is the one being
       // read. Picking "most visible" makes the indicator jump backwards when a long section
       // scrolls past a short one.
+      //
+      // A post's outline targets headings, not whole sections, so between two headings nothing
+      // is in the band at all — and the marker would vanish mid-section. The heading being read
+      // is then the last one scrolled past. On the home page the sections are contiguous, so this
+      // only applies above the first one, where nothing has been scrolled past and nothing is
+      // marked, as before. It reads layout, but only in the observer callback, not per frame.
       const current = sections.find(entry => visible.has(entry.el.id))
+        ?? sections.findLast(entry => entry.el.getBoundingClientRect().top < bandTop)
+      // Compared by target, not by entry: a post renders its outline twice (a collapsible one
+      // below lg, a sticky one above it), so one heading can own more than one link.
       for (const entry of sections)
-        entry.link.setAttribute('aria-current', current && entry === current ? 'true' : 'false')
+        entry.link.setAttribute('aria-current', current && entry.el === current.el ? 'true' : 'false')
     }
 
     const observer = new IntersectionObserver((entries) => {
