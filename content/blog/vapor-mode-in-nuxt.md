@@ -1,9 +1,9 @@
 ---
 title: "Vapor Mode in Nuxt: setup and what breaks in interop mode"
 description: Nuxt runs Vue Vapor Mode in interop mode only. How to enable it on a Vue 3.6 release candidate, and the five limits to check before converting.
-date: 2026-10-27
+date: 2026-09-29
 tags: [nuxt, vue, performance]
-draft: true
+draft: false
 ---
 
 Nuxt can run Vue 3.6's Vapor Mode, but only one way. Your app stays a Virtual DOM app, and you opt

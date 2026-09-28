@@ -1,9 +1,9 @@
 ---
 title: Where AI helps and where it fails in frontend work
 description: The frontend tasks where an AI assistant saves real time, the ones where it quietly makes things worse, and the review habits that catch the difference.
-date: 2026-12-22
+date: 2026-09-29
 tags: [ai, career]
-draft: true
+draft: false
 ---
 
 An AI coding assistant can save you hours on one task and cost you hours on the next, because the

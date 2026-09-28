@@ -1,9 +1,9 @@
 ---
 title: Fixing Nuxt hydration mismatch errors
 description: A hydration mismatch means the server and the browser rendered different HTML. The seven usual causes in Nuxt, how to find yours, and each fix.
-date: 2026-11-24
+date: 2026-09-29
 tags: [nuxt, vue, debugging]
-draft: true
+draft: false
 ---
 
 You open the console and see it:

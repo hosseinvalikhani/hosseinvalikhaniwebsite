@@ -1,9 +1,9 @@
 ---
 title: "The European Accessibility Act: a checklist for frontend developers"
 description: The EAA has been enforceable since 28 June 2025. What it means for the code you write, a checklist mapped to WCAG 2.1 AA, and an accessible Vue form to copy.
-date: 2026-12-08
+date: 2026-09-29
 tags: [accessibility, vue]
-draft: true
+draft: false
 ---
 
 The European Accessibility Act (EAA) has applied since **28 June 2025**. If your product sells

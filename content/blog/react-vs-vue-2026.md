@@ -1,9 +1,9 @@
 ---
 title: "React vs Vue in 2026: an honest comparison, jobs included"
 description: A Vue developer compares Vue and React on reactivity, templates, state, meta-frameworks and the job market, without declaring a winner that does not exist.
-date: 2026-11-03
+date: 2026-09-29
 tags: [vue, react, career]
-draft: true
+draft: false
 ---
 
 I write Vue for a living, and I know React but use it less. Most comparisons I read are written by

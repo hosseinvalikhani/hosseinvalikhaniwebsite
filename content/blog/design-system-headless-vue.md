@@ -1,9 +1,9 @@
 ---
 title: A small design system with tokens and headless Vue components
 description: Tokens for decisions, a headless library for behaviour and your own components on top. A small Vue design system that stays accessible.
-date: 2026-12-01
+date: 2026-09-29
 tags: [design-systems, vue, accessibility, css]
-draft: true
+draft: false
 ---
 
 A design system does not need to start as a big project. It needs three layers, each with one job:

@@ -1,9 +1,9 @@
 ---
 title: "Frontend developer roadmap 2026: what I would learn again"
 description: A frontend roadmap from someone who took it recently. What paid off in three jobs, what I would skip, and the order I would learn it in if I started today.
-date: 2026-10-20
+date: 2026-09-29
 tags: [career]
-draft: true
+draft: false
 ---
 
 Most frontend roadmaps list everything. A diagram with 120 boxes tells you nothing about which

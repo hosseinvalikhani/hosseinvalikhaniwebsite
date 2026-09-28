@@ -1,9 +1,9 @@
 ---
 title: Frontend portfolio project ideas, by difficulty
 description: Twelve frontend portfolio projects sorted by difficulty, what each one proves to a hiring manager, and the detail that makes it stand out.
-date: 2026-12-15
+date: 2026-09-29
 tags: [career]
-draft: true
+draft: false
 ---
 
 A to-do app does not hurt your portfolio. A to-do app that looks like every other one does not

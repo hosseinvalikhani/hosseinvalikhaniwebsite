@@ -1,9 +1,9 @@
 ---
 title: Vue interview questions, answered and explained
 description: Fifteen Vue 3 interview questions with the answer an interviewer wants, the follow-up they will ask next, and the code that shows you understand it.
-date: 2026-11-10
+date: 2026-09-29
 tags: [vue, career]
-draft: true
+draft: false
 ---
 
 A good Vue interview does not test whether you memorized the docs. It tests whether you understand

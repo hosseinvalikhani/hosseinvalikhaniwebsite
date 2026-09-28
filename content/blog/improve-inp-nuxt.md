@@ -1,9 +1,9 @@
 ---
 title: How I improved INP in a Nuxt app, with measured results
 description: INP measures how long your page ignores a click. How to find the slow interaction in a Nuxt app, which of its three parts is slow, and the fixes that moved it.
-date: 2026-10-13
+date: 2026-09-29
 tags: [nuxt, performance, core-web-vitals]
-draft: true
+draft: false
 ---
 
 Interaction to Next Paint (INP) measures one thing: after someone clicks, taps or types, how long

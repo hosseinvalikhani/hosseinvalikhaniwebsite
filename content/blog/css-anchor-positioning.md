@@ -1,9 +1,9 @@
 ---
 title: "CSS anchor positioning: tooltips and dropdowns without JavaScript"
 description: Anchor positioning has been Baseline since January 2026. Build a dropdown and a tooltip with it, flip them at the viewport edge, and keep a fallback.
-date: 2026-11-17
+date: 2026-09-29
 tags: [css, accessibility]
-draft: true
+draft: false
 ---
 
 For years, placing a dropdown under its button meant a JavaScript library. You measured the

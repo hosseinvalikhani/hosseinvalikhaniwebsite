@@ -1,9 +1,9 @@
 ---
 title: "Vue 3.6 Vapor Mode: a hands-on guide with real benchmarks"
 description: Vapor Mode compiles Vue components without the Virtual DOM. What it is, how to turn it on, what it refuses to compile, and how to measure it yourself.
-date: 2026-10-06
+date: 2026-09-29
 tags: [vue, performance]
-draft: true
+draft: false
 ---
 
 Vue 3.6 adds a second way to compile a component. Vapor Mode skips the Virtual DOM entirely and
